@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1520">
+  <meta name="description" content="IQ Wallet NFC: terminal web experimental con lecturas físicas NFC y saldo local de demostración.">
+  <title>IQ Wallet NFC · Terminal</title>
+  <style>
+    :root{color-scheme:light;--ink:#11202b;--muted:#72808c;--green:#10ad70;--green-dark:#078855;--bg:#f3f6f6;--line:#e5ebed;--radius:22px}
+    *{box-sizing:border-box}html{min-height:100%;background:#0b1520}body{margin:0;color:var(--ink);background:var(--bg);font:500 15px/1.4 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+    button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #79d4b3;outline-offset:3px}button:disabled{opacity:.55;cursor:not-allowed}p,h1,h2,h3{margin:0}svg{display:block}small{font-size:12px}strong{font-weight:800}
+    .shell{min-height:100dvh;display:flex;align-items:stretch;justify-content:center;padding:0}
+    .app{width:100%;max-width:1120px;min-height:100dvh;overflow:hidden;display:flex;flex-direction:column;background:#f6f8f8;box-shadow:0 20px 70px #08152129}
+    header{background:#101d28;color:white;padding:17px clamp(18px,4vw,38px) 21px;position:relative;isolation:isolate;overflow:hidden}
+    header:after{content:"";position:absolute;width:330px;height:330px;border-radius:50%;background:#0e765c80;filter:blur(70px);right:-180px;top:-240px;z-index:-1}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .logo{display:flex;gap:9px;align-items:center;font-size:20px;letter-spacing:-.7px;font-weight:800}.logo b{font-weight:900;color:#31d69b}.logo-icon{width:35px;height:35px;border-radius:10px;background:#123d35;display:grid;place-items:center;color:#40e5ab}
+    .version{font-size:10px;border:1px solid #ffffff2b;border-radius:100px;padding:6px 9px;color:#bacdd2;letter-spacing:1px;font-weight:800}
+    .greeting{margin-top:24px;color:#97b0ba;font-size:12px;letter-spacing:.12em;font-weight:800;text-transform:uppercase}.page-title{font-size:clamp(27px,5vw,36px);letter-spacing:-1.4px;margin-top:5px;font-weight:850}.page-sub{margin-top:5px;color:#a9c0c6;font-size:13px}
+    .tabs{margin-top:18px;display:flex;gap:8px}.tab{color:#a9c0c6;border:1px solid #ffffff22;border-radius:11px;background:#ffffff0b;padding:9px 14px;font-size:12px;font-weight:750;display:flex;align-items:center;gap:7px}.tab.active{background:#ffffff;color:#18292f;border-color:#fff}.tab svg{width:16px;height:16px}
+    main{padding:18px clamp(14px,3.6vw,34px) 30px;flex:1}.view[hidden]{display:none!important}.desktop-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(286px,.75fr);gap:18px;align-items:start}
+    .left-stack,.right-stack{display:flex;flex-direction:column;gap:15px}.card{background:white;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 24px rgba(17,37,42,.035);overflow:hidden}.balance{background:linear-gradient(130deg,#12372f 0%,#098d61 100%);color:white;padding:20px 23px;position:relative;isolation:isolate;min-height:140px}.balance:before{content:"";position:absolute;width:200px;height:200px;border:1px solid #ffffff29;border-radius:50%;right:-50px;top:-90px;box-shadow:0 0 0 38px #ffffff0b,0 0 0 75px #ffffff09;z-index:-1}.balance-top{display:flex;justify-content:space-between;align-items:center;color:#d1f5e5;font-size:12px;font-weight:650}.balance-amount{font-size:clamp(42px,7vw,53px);line-height:1;letter-spacing:-2px;margin:17px 0 10px;font-weight:850}.balance-bottom{display:flex;justify-content:space-between;align-items:center;color:#d9f8ed;font-size:11px}.balance-pill{background:#ffffff24;border:1px solid #ffffff32;border-radius:50px;padding:4px 9px;font-size:10px;font-weight:750}
+    .reader{padding:23px 20px 20px;text-align:center}.reader-head{display:flex;justify-content:space-between;align-items:center;text-align:left;margin-bottom:13px}.section-title{font-size:16px;font-weight:820;letter-spacing:-.4px}.live{display:flex;align-items:center;gap:6px;color:#788891;font-size:11px;font-weight:730;background:#f2f5f5;border:1px solid #e8ecec;border-radius:100px;padding:7px 10px}.live i{width:7px;height:7px;border-radius:50%;background:#9ba9ae}.live.active{color:#09734b;background:#e9fbf1;border-color:#caeedb}.live.active i{background:#12b376;box-shadow:0 0 0 4px #12b37617}.live.warn{background:#fff8e7;color:#9d6a13;border-color:#f7e3b9}.live.warn i{background:#e8a62d}
+    .scan-zone{position:relative;min-height:229px;display:grid;place-items:center;overflow:hidden}.rings{position:absolute;width:234px;height:234px;display:grid;place-items:center;left:50%;top:50%;transform:translate(-50%,-50%)}.rings span{position:absolute;display:block;border:1.5px solid #d6e8e0;border-radius:50%;width:110px;height:110px}.rings span:nth-child(2){width:165px;height:165px;opacity:.7}.rings span:nth-child(3){width:223px;height:223px;opacity:.42}.scanning .rings span{animation:breathe 2.8s ease-in-out infinite}.scanning .rings span:nth-child(2){animation-delay:.25s}.scanning .rings span:nth-child(3){animation-delay:.5s}@keyframes breathe{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.04);opacity:1}}
+    .tap-icon{width:104px;height:104px;border-radius:28px;background:linear-gradient(155deg,#e9f9f0,#f8fffb);border:1px solid #d6f2e1;box-shadow:0 12px 35px #04a16d18;display:grid;place-items:center;color:#0ba46a;position:relative}.tap-icon svg{width:54px;height:54px}.reader-label{font-size:17px;font-weight:800;letter-spacing:-.4px;margin:0 auto 5px}.reader-hint{font-size:12px;color:#86959a;max-width:310px;margin:0 auto;min-height:38px}.price-row{margin:14px 0 0;background:#f4f7f7;border:1px solid #edf0f0;border-radius:16px;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;text-align:left}.price-row span{color:#637681;font-size:12px}.price-row strong{font-size:22px;letter-spacing:-.7px}.control-primary{width:100%;background:linear-gradient(100deg,#0bad74,#078c5a);border:0;color:white;font-size:15px;font-weight:800;border-radius:14px;padding:14px 17px;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 9px 18px #069e6627}.control-primary[hidden]{display:none!important}.subtle-action{border:0;background:transparent;color:#6a8187;text-decoration:underline;font-size:11px;padding:10px;margin-top:4px}.subtle-action[hidden]{display:none!important}.notice{font-size:11px;color:#829398;margin-top:9px;line-height:1.45}.notice strong{color:#425b62}
+    .mini-header{display:flex;align-items:center;justify-content:space-between;padding:17px 18px 12px}.mini-link{border:0;background:none;color:#0b9165;font-size:12px;font-weight:800;padding:4px}.tx-list{padding:0 17px 10px}.tx-empty{color:#8b9ca3;font-size:12px;padding:20px 8px;text-align:center}.tx{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #eff2f2}.tx:last-child{border-bottom:0}.tx-ico{width:37px;height:37px;border-radius:12px;background:#e9f7f0;color:#089c67;display:grid;place-items:center;flex:none}.tx-ico.err{background:#fff1d6;color:#bf811d}.tx-ico svg{width:19px;height:19px}.tx-main{flex:1;min-width:0}.tx-name{font-size:12px;font-weight:800}.tx-date{font-size:10px;color:#84949c;margin-top:2px}.tx-amount{font-size:13px;font-weight:850}.pill-warning{font-size:10px;color:#ad7018;background:#fff4df;border-radius:9px;padding:4px 6px;display:inline-block;margin-top:4px}
+    .stats-card{padding:18px}.stat-line{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:16px}.stat-line:first-of-type{margin-top:12px}.stat-line span{font-size:12px;color:#849399}.stat-line strong{font-size:13px}.divider{border:0;border-top:1px solid #eff1f1;margin:16px 0}
+    .diag{background:#0e1b26;color:#d1e9e4;border-radius:18px;padding:16px}.diag h3{font-size:13px;display:flex;gap:8px;align-items:center;margin-bottom:9px}.diag p{font-size:11px;color:#a7bfc2;line-height:1.5}.diag-time{font-variant-numeric:tabular-nums;color:#57d9b0!important;margin-top:6px}
+    .info{padding:17px 18px}.info h2{font-size:14px;font-weight:820;margin-bottom:10px}.info p{font-size:12px;line-height:1.55;color:#71858e}.info p+p{margin-top:7px}.footer{color:#9aabb0;padding:12px 22px 20px;font-size:10px;text-align:center}
+    .settings{max-width:560px;margin:auto;display:flex;flex-direction:column;gap:15px}.settings .card{padding:20px}.settings h2{font-size:17px;margin-bottom:6px}.settings p{font-size:12px;color:#77888e;line-height:1.55;margin-bottom:14px}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-top:1px solid #e9eeee}.setting-row strong{display:block;font-size:13px}.setting-row small{display:block;color:#88969b;font-size:11px;margin-top:3px;max-width:320px}.toggle{width:50px;height:28px;border-radius:50px;background:#c5ced0;border:0;flex:none;padding:3px;transition:background .2s}.toggle:before{content:"";display:block;width:22px;height:22px;background:white;border-radius:50%;box-shadow:0 2px 5px #0002;transition:transform .2s}.toggle[aria-pressed="true"]{background:#0baa71}.toggle[aria-pressed="true"]:before{transform:translateX(22px)}.danger{background:#fff;border:1px solid #ffcdd2;color:#b23d4e;border-radius:13px;padding:12px 15px;font-weight:780;width:100%}.secondary-btn{background:#f0f3f3;border:1px solid #dbe3e4;border-radius:12px;padding:12px 16px;font-weight:800;color:#51636a}
+    .movements{max-width:720px;margin:auto}.movements .card{min-height:240px}.movements .tx-list{padding:5px 20px 15px}
+    .toast{position:fixed;left:50%;bottom:max(22px,env(safe-area-inset-bottom));transform:translate(-50%,30px);min-width:min(340px,calc(100% - 30px));max-width:440px;display:flex;align-items:center;gap:12px;color:#fff;background:#112b27;box-shadow:0 20px 60px #00251b55;padding:14px 16px;border-radius:17px;z-index:20;opacity:0;pointer-events:none;transition:.25s}.toast.show{transform:translate(-50%,0);opacity:1}.toast.warn{background:#624b19}.toast-icon{background:#16a776;border-radius:100px;width:37px;height:37px;display:grid;place-items:center;flex:none}.toast.warn .toast-icon{background:#aa7e2b}.toast strong{font-size:13px;display:block}.toast small{color:#d2e3df;display:block;margin-top:2px}.overlay{position:fixed;inset:0;background:#061b23b0;display:grid;place-items:center;padding:16px;z-index:40}.overlay[hidden]{display:none}.modal{background:white;width:min(390px,100%);padding:23px;border-radius:23px;box-shadow:0 20px 60px #0004}.modal h2{font-size:20px;margin:10px 0 6px}.modal p{font-size:13px;color:#75868a;line-height:1.5;margin-bottom:19px}.modal-actions{display:flex;gap:10px}.modal-actions button{flex:1}.modal-actions .control-primary{margin:0}.badge-demo{display:inline-flex;color:#96751b;background:#fff4cf;border:1px solid #f1e0a8;border-radius:8px;padding:6px 9px;font-size:10px;font-weight:850}
+    @media(min-width:900px){.app{min-height:calc(100dvh - 38px);margin:19px;border-radius:28px}.shell{background:#e9eff0}.reader{padding:22px 30px 25px}.scan-zone{min-height:247px}main{padding-top:22px}}
+    @media(max-width:760px){.desktop-grid{grid-template-columns:1fr}.stats-card{display:none}.info.desktop-info{display:none}.diag{order:2}.reader{order:1}.balance{min-height:134px}.right-stack{order:2}.left-stack{order:1}.reader{padding:16px 18px 19px}.reader-head{margin-bottom:1px}.scan-zone{min-height:208px}.rings{transform:translate(-50%,-50%) scale(.84)}.tap-icon{width:94px;height:94px}.reader-label{font-size:16px}.page-title{font-size:28px}.greeting{margin-top:20px}.tabs{margin-top:15px}header{padding-bottom:18px}.balance-amount{font-size:45px}.tx-list{padding-bottom:8px}}
+    @media(max-width:360px){.tab{padding:9px 10px}.version{display:none}.reader{padding:13px}.balance{padding:17px}.balance-amount{font-size:39px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<div class="shell"><div class="app">
+  <header>
+    <div class="top">
+      <div class="logo"><div class="logo-icon" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 8a6 6 0 0 1 0 8M9 5a10 10 0 0 1 0 14M14 9a4 4 0 0 1 0 6"/><circle cx="18" cy="12" r="2" fill="currentColor" stroke="none"/></svg></div><span><b>IQ</b> Wallet</span></div>
+      <div class="version">NFC · WEB <span style="color:#39dbad">●</span></div>
+    </div>
+    <div class="greeting">Terminal experimental · IQneting</div>
+    <h1 class="page-title">Cobros con un toque</h1>
+    <div class="page-sub">Escanea una etiqueta NFC y registra un cargo ficticio.</div>
+    <nav class="tabs" aria-label="Secciones">
+      <button type="button" class="tab active" data-view="terminal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M12 8v8"/></svg>Terminal</button>
+      <button type="button" class="tab" data-view="movements"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h16M4 14h16M4 20h10"/><circle cx="7" cy="4" r="1"/></svg>Movimientos</button>
+      <button type="button" class="tab" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2 2m10.2 10.2 2 2M19.1 4.9l-2 2M6.9 17.1l-2 2"/></svg>Ajustes</button>
+    </nav>
+  </header>
+  <main>
+    <section class="view" id="view-terminal" aria-label="Terminal NFC">
+      <div class="desktop-grid">
+        <div class="left-stack">
+          <div class="card balance">
+            <div class="balance-top"><span>Saldo virtual disponible</span><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e6fff4" stroke-width="1.8"><rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 10h18M7 6V3h12"/></svg></div>
+            <div class="balance-amount" id="balance-main">$100.00</div>
+            <div class="balance-bottom"><span>No es dinero real</span><span class="balance-pill">SALDO DEMO</span></div>
+          </div>
+          <div class="card reader" id="reader-card">
+            <div class="reader-head"><h2 class="section-title">Lector NFC</h2><div id="live" class="live"><i></i><span id="live-label">Comprobando</span></div></div>
+            <div class="scan-zone" id="scan-zone"><div class="rings" aria-hidden="true"><span></span><span></span><span></span></div><div class="tap-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 22c-8 6-8 14 0 20M22 14C9 23 9 41 22 50M32 7c-21 14-21 36 0 50"/><rect x="36" y="20" width="16" height="25" rx="3" transform="rotate(16 44 32)"/><path d="m39 28 11 3"/></svg></div></div>
+            <h3 class="reader-label" id="reader-label">Preparando lector</h3>
+            <p class="reader-hint" id="reader-hint">Verificando si tu navegador admite NFC…</p>
+            <div class="price-row"><span>Descuento por lectura válida</span><strong>−$5.00</strong></div>
+            <button type="button" class="control-primary" id="activate" hidden>Activar lector NFC</button>
+            <button type="button" class="subtle-action" id="pause" hidden>Pausar lectura</button>
+            <div class="notice"><strong>Lectura física.</strong> Sin botones para simular cobros. Solo saldo ficticio en este navegador.</div>
+          </div>
+        </div>
+        <div class="right-stack">
+          <div class="card stats-card">
+            <h2 class="section-title">Resumen de prueba</h2>
+            <div class="stat-line"><span>Cargos registrados</span><strong id="charges-count">0</strong></div>
+            <div class="stat-line"><span>Total descontado</span><strong id="charges-total">$0.00</strong></div>
+            <div class="stat-line"><span>Próxima lectura</span><strong id="next-read">Disponible</strong></div>
+          </div>
+          <div class="card">
+            <div class="mini-header"><h2 class="section-title">Últimos movimientos</h2><button type="button" class="mini-link" data-view="movements">Ver todos</button></div>
+            <div class="tx-list" id="recent-list"><div class="tx-empty">No hay cobros todavía.</div></div>
+          </div>
+          <div class="diag" aria-live="polite">
+            <h3><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#43dba4" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg> Diagnóstico en vivo</h3>
+            <p id="diagnostic">Iniciando comprobación de compatibilidad.</p>
+            <p class="diag-time" id="diagnostic-time">Sin eventos todavía</p>
+          </div>
+          <div class="card info desktop-info"><h2>Prueba segura y transparente</h2><p>El saldo pertenece a esta demostración local, no a las tarjetas. No se consulta, modifica ni cobra dinero en tarjetas bancarias, de transporte o de elevador.</p><p>Las tarjetas no NDEF podrían generar un aviso de error; Chrome no garantiza recibir ese evento. Puedes probar la opción experimental desde Ajustes.</p></div>
+        </div>
+      </div>
+    </section>
+    <section class="view movements" id="view-movements" hidden>
+      <div class="card"><div class="mini-header"><h2 class="section-title">Historial local</h2><span class="badge-demo">DEMO</span></div><div class="tx-list" id="all-list"></div></div>
+    </section>
+    <section class="view settings" id="view-settings" hidden>
+      <div class="card"><h2>Lecturas experimentales</h2><p>Chrome lee mensajes NDEF y puede avisar que hubo un problema con una tarjeta cercana. El aviso de error no identifica ni verifica la tarjeta.</p>
+        <div class="setting-row"><div><strong>Descontar en eventos de error NFC</strong><small>Solo para la demo: si Chrome emite <code>readingerror</code>, descuenta $5 con etiqueta «no verificado». Puede producir falsos positivos.</small></div><button type="button" id="toggle-error-charge" class="toggle" aria-pressed="false" aria-label="Descuento experimental por readingerror"></button></div>
+        <div class="setting-row"><div><strong>Protección contra duplicados</strong><small>Entre dos cargos se esperan al menos 8 segundos. Mantén la tarjeta alejada después de cada lectura.</small></div><span style="font-size:12px;color:#0e9468;font-weight:850;white-space:nowrap">Siempre activa</span></div>
+      </div>
+      <div class="card"><h2>Herramientas de prueba</h2><p>Reinicia saldo virtual a $100 y limpia movimientos. No altera ninguna tarjeta ni requiere una base de datos.</p><button type="button" class="danger" id="reset">Reiniciar saldo e historial</button></div>
+      <div class="card"><h2>Compatibilidad</h2><p>Requiere HTTPS, Google Chrome para Android, permiso NFC y pantalla encendida con la pestaña visible. Tras conceder permiso, intentará leer automáticamente al volver a abrirse.</p><p>Una tarjeta del Metro, bancaria o de acceso puede activar el NFC de Android y aun así no generar ningún evento accesible desde esta web.</p><p><strong>Por seguridad:</strong> no se guardan números de tarjetas, contenidos NDEF ni identificadores NFC en el historial.</p></div>
+    </section>
+  </main>
+  <div class="footer">IQNETING · Prototipo de laboratorio · Sin pagos reales · v1.0</div>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><div class="toast-icon" id="toast-icon"><svg width="24" height="24" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="m4 12 5 5 11-11"/></svg></div><div><strong id="toast-title">Cobro registrado</strong><small id="toast-desc">Nuevo saldo: $95.00</small></div></div>
+<div class="overlay" id="confirm-reset" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title"><span class="badge-demo">SALDO FICTICIO</span><h2 id="confirm-title">¿Reiniciar demostración?</h2><p>El saldo regresará a $100 y se eliminarán todos los movimientos de este navegador.</p><div class="modal-actions"><button type="button" class="secondary-btn" id="cancel-reset">Cancelar</button><button type="button" class="control-primary" id="confirm-reset-button">Reiniciar</button></div></div></div>
+<script>
+(() => {
+  'use strict';
+  const STORAGE_KEY = 'iqneting.wallet.nfc.lab.v1';
+  const CHARGE_CENTS = 500;
+  const INITIAL_CENTS = 10000;
+  const COOLDOWN_MS = 8000;
+  const el = id => document.getElementById(id);
+  let state = load();
+  let scanner = null;
+  let aborter = null;
+  let isScanning = false;
+  let isStarting = false;
+  let hasManualPause = false;
+  let lastDebitAt = 0;
+  let toastTimeout = 0;
+  let lastDiagnostic = '';
+  const shortTime = time => new Intl.DateTimeFormat('es-MX',{dateStyle:'short',timeStyle:'short'}).format(new Date(time));
+  const money = cents => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(cents/100);
+  function load(){try{const raw=JSON.parse(localStorage.getItem(STORAGE_KEY));if(raw&&Number.isInteger(raw.balance)&&raw.balance>=0&&raw.balance<=10000000&&Array.isArray(raw.items))return {balance:raw.balance,items:raw.items.slice(0,100),errorDebit:raw.errorDebit===true};}catch(e){}return {balance:INITIAL_CENTS,items:[],errorDebit:true};}
+  function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){diagnostic('Almacenamiento local no disponible; el saldo se perderá al recargar.');}}
+  function iconMarkup(warn){return warn?'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg>':'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8a6 6 0 0 1 0 8m4-12a11 11 0 0 1 0 16m4-12a5 5 0 0 1 0 8"/></svg>';}
+  function renderList(container, items){container.replaceChildren();if(!items.length){const empty=document.createElement('div');empty.className='tx-empty';empty.textContent='Todavía no hay movimientos. Acerca una etiqueta NFC para probar.';container.append(empty);return;}for(const entry of items){const item=document.createElement('div');item.className='tx';const icon=document.createElement('div');icon.className='tx-ico'+(entry.source==='error'?' err':'');icon.innerHTML=iconMarkup(entry.source==='error');const main=document.createElement('div');main.className='tx-main';const name=document.createElement('div');name.className='tx-name';name.textContent=entry.source==='error'?'Evento NFC no verificado':'Cobro NFC confirmado';main.append(name);const date=document.createElement('div');date.className='tx-date';date.textContent=shortTime(entry.time);main.append(date);if(entry.source==='error'){const warn=document.createElement('span');warn.className='pill-warning';warn.textContent='Señal sin identificar';main.append(warn);}const amount=document.createElement('div');amount.className='tx-amount';amount.textContent='−'+money(CHARGE_CENTS);item.append(icon,main,amount);container.append(item);}}
+  function render(){el('balance-main').textContent=money(state.balance);el('charges-count').textContent=String(state.items.length);el('charges-total').textContent=money(state.items.length*CHARGE_CENTS);el('toggle-error-charge').setAttribute('aria-pressed',String(state.errorDebit));renderList(el('recent-list'),state.items.slice(0,3));renderList(el('all-list'),state.items);}
+  function status(mode,label,headline,hint){const live=el('live');live.className='live '+(mode==='active'?'active':mode==='warn'?'warn':'');el('live-label').textContent=label;el('reader-label').textContent=headline;el('reader-hint').textContent=hint;el('scan-zone').classList.toggle('scanning',mode==='active');}
+  function diagnostic(message){lastDiagnostic=message;el('diagnostic').textContent=message;el('diagnostic-time').textContent='Último evento: '+new Date().toLocaleTimeString('es-MX');}
+  function showToast(title,description,warn=false){el('toast-title').textContent=title;el('toast-desc').textContent=description;el('toast').className='toast show'+(warn?' warn':'');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el('toast').classList.remove('show'),3400);}
+  function feedback(){try{navigator.vibrate?.(85);}catch(e){}try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;const ctx=new Audio();const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(840,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(1050,ctx.currentTime+.12);g.gain.setValueAtTime(.0001,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.07,ctx.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.22);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.23);setTimeout(()=>ctx.close().catch(()=>{}),450);}catch(e){}}
+  function takeCharge(source){const now=Date.now();if(now-lastDebitAt<COOLDOWN_MS){diagnostic('Lectura recibida, pero se ignoró por protección contra cobro duplicado.');return;}lastDebitAt=now;if(state.balance<CHARGE_CENTS){showToast('Saldo insuficiente','No se ha descontado nada.',true);diagnostic('Evento NFC detectado. Rechazado por saldo insuficiente.');return;}state.balance-=CHARGE_CENTS;state.items.unshift({time:now,source});state.items=state.items.slice(0,100);save();render();const verified=source==='ndef';showToast(verified?'Cobro de prueba registrado':'Descuento experimental',verified?'Etiqueta NDEF leída · Saldo '+money(state.balance):'Lectura no verificada · Saldo '+money(state.balance),!verified);diagnostic(verified?'Lectura NDEF confirmada: se descontaron $5 ficticios.':'Se detectó readingerror: se descontaron $5 ficticios sin verificar ni identificar tarjeta.');feedback();}
+  function onRead(event){const count=event.message?.records?.length ?? 0;diagnostic('Web NFC recibió una lectura NDEF con '+count+' registro(s). No se almacenó su contenido.');takeCharge('ndef');}
+  function onReadError(){diagnostic('Evento readingerror: el navegador detectó un problema NFC, pero NO identificó la tarjeta.');if(state.errorDebit){takeCharge('error');}else{showToast('NFC detectado, lectura fallida','No se realizó descuento. Activa el modo experimental en Ajustes.',true);}}
+  function setStartButton(text){el('activate').hidden=false;el('activate').textContent=text||'Activar lector NFC';el('activate').disabled=false;}
+  function showActive(){status('active','Escuchando','Acerca una etiqueta NFC','Lector activo. Acerca una etiqueta NFC a la parte trasera del teléfono.');el('activate').hidden=true;el('pause').hidden=false;}
+  function stopScanner(){aborter?.abort();aborter=null;scanner=null;isScanning=false;isStarting=false;}
+  async function beginScan(){if(isStarting||isScanning)return;if(!('NDEFReader'in window)){status('warn','No compatible','Web NFC no disponible','Abre esta página con Google Chrome en Android usando HTTPS.');diagnostic('El navegador no expone NDEFReader. No podemos acceder al lector NFC desde esta página.');setStartButton('NFC no disponible en este navegador');el('activate').disabled=true;return;}
+    if(!window.isSecureContext){status('warn','HTTPS requerido','Conexión no segura','Publica esta página en HTTPS para permitir Web NFC.');diagnostic('El sitio necesita HTTPS para usar Web NFC.');setStartButton('Requiere HTTPS');el('activate').disabled=true;return;}
+    hasManualPause=false;isStarting=true;el('activate').disabled=true;status('','Iniciando','Conectando con NFC','Chrome puede solicitar permiso para usar el lector.');diagnostic('Solicitando activación del lector NFC…');
+    try{const controller=new AbortController();aborter=controller;scanner=new NDEFReader();scanner.addEventListener('reading',onRead);scanner.addEventListener('readingerror',onReadError);await scanner.scan({signal:controller.signal});isScanning=true;showActive();diagnostic('Escaneo activo. Esperando eventos Web NFC reales.');}catch(error){stopScanner();let explanation='Comprueba NFC, permisos y navegador.';if(error?.name==='NotAllowedError')explanation='Permiso denegado: habilita NFC para este sitio en Chrome.';if(error?.name==='NotSupportedError')explanation='No se encontró un adaptador Web NFC compatible o NFC está apagado.';if(error?.name==='InvalidStateError')explanation='Hay un escaneo NFC en curso. Actualiza la página.';status('warn','Sin acceso','No se pudo activar NFC',explanation);diagnostic('Error '+(error?.name||'desconocido')+': '+(error?.message||explanation));setStartButton('Volver a intentar');el('pause').hidden=true;}finally{isStarting=false;}}
+  async function autoStart(){if(!('NDEFReader'in window)||!window.isSecureContext){await beginScan();return;}try{if(!navigator.permissions?.query)throw new Error('Permisos no consultables');const perm=await navigator.permissions.query({name:'nfc'});if(perm.state==='granted'){diagnostic('Permiso NFC previamente autorizado. Inicio automático.');await beginScan();}else{status('warn','Permiso inicial','Activa NFC una vez','Pulsa el botón para conceder acceso. En próximas visitas intentará conectarse solo.');setStartButton('Activar lector NFC');diagnostic(perm.state==='denied'?'Permiso NFC bloqueado desde la configuración del navegador.':'Se necesita autorización inicial del usuario.');}}
+    catch(error){status('warn','Permiso inicial','Autoriza el lector NFC','Pulsa Activar NFC para iniciar el lector físico.');setStartButton('Activar lector NFC');diagnostic('No se pudo consultar permiso NFC; requiere activación manual.');}}
+  const views=['terminal','movements','settings'];function showView(view){for(const name of views){el('view-'+name).hidden=name!==view;}document.querySelectorAll('[data-view]').forEach(node=>{if(node.classList.contains('tab'))node.classList.toggle('active',node.dataset.view===view);});if(view==='terminal')window.scrollTo({top:0,behavior:'instant'});}
+  document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>showView(btn.dataset.view)));
+  el('activate').addEventListener('click',beginScan);
+  el('pause').addEventListener('click',()=>{hasManualPause=true;stopScanner();status('warn','Pausado','Lectura detenida','Vuelve a activar el lector cuando quieras continuar.');setStartButton('Reanudar NFC');el('pause').hidden=true;diagnostic('Lectura detenida manualmente.');});
+  el('toggle-error-charge').addEventListener('click',()=>{state.errorDebit=!state.errorDebit;save();render();diagnostic(state.errorDebit?'Modo experimental activo: readingerror descontará $5 ficticios.':'Modo experimental apagado: readingerror solo notificará.');});
+  el('reset').addEventListener('click',()=>el('confirm-reset').hidden=false);
+  el('cancel-reset').addEventListener('click',()=>el('confirm-reset').hidden=true);
+  el('confirm-reset-button').addEventListener('click',()=>{state.balance=INITIAL_CENTS;state.items=[];lastDebitAt=0;save();render();el('confirm-reset').hidden=true;showToast('Demostración reiniciada','Saldo restaurado a $100.00');diagnostic('Saldo local restablecido. El lector NFC sigue disponible.');});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){diagnostic('Pestaña no visible: Chrome suspende temporalmente el acceso NFC.');}else if(isScanning){showActive();diagnostic('Pestaña visible: esperando nuevas lecturas NFC.');}else if(!hasManualPause){autoStart();}});
+  setInterval(()=>{const seconds=Math.max(0,Math.ceil((COOLDOWN_MS-(Date.now()-lastDebitAt))/1000));el('next-read').textContent=seconds>0?seconds+' s':'Disponible';},450);
+  render();autoStart();
+})();
+</script>
+</body>
+</html>
