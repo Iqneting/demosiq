@@ -2,801 +2,165 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#102756">
-  <meta name="description" content="Demostración visual de examen en línea con guardado local, certificado y pago simulado.">
-  <title>IQ Examen | Demo Visual</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23102756'/%3E%3Cpath d='M18 33l9 9 19-22' fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1520">
+  <meta name="description" content="IQ Wallet NFC: terminal web experimental con lecturas físicas NFC y saldo local de demostración.">
+  <title>IQ Wallet NFC · Terminal</title>
   <style>
-    :root {
-      color-scheme: light;
-      --navy:#102756;
-      --navy-2:#17346f;
-      --blue:#145cde;
-      --blue-2:#0f4fca;
-      --sky:#eef5ff;
-      --sky-2:#dce9ff;
-      --green:#12a06d;
-      --green-soft:#e8f8f1;
-      --gold:#c79837;
-      --gold-soft:#fff5dd;
-      --text:#142440;
-      --muted:#6d7d96;
-      --line:#dfe8f3;
-      --bg:#edf2f9;
-      --white:#ffffff;
-      --shadow:0 20px 45px rgba(15,37,73,.09);
-      --card-shadow:0 10px 24px rgba(17,44,89,.08);
-    }
-    *,*::before,*::after{box-sizing:border-box}
-    html,body{width:100%;height:100%;margin:0}
-    body{background:radial-gradient(circle at top,#f7fbff 0,#edf2f9 54%,#e8eef7 100%);color:var(--text);font:500 16px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
-    button,input{font:inherit}
-    button{cursor:pointer}
-    button:focus-visible,input:focus-visible{outline:3px solid #79a8ff;outline-offset:3px}
-    .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    .shell{min-height:100svh;min-height:100dvh;display:grid;place-items:center;padding:18px}
-    .app{width:min(920px,100%);height:min(760px,calc(100svh - 36px));height:min(760px,calc(100dvh - 36px));display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(180deg,#fff 0,#fbfdff 100%);border:1px solid #dae4f0;border-radius:28px;box-shadow:var(--shadow)}
-    .topbar{min-height:76px;padding:14px 26px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#ffffff 0,#f9fbff 100%)}
-    .brand{display:flex;align-items:center;gap:12px;font-size:21px;font-weight:850;letter-spacing:-.8px;color:var(--navy)}
-    .brand-mark{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--navy),#1e54bf);box-shadow:inset 0 1px 0 rgba(255,255,255,.16)}
-    .brand-mark svg{width:22px;height:22px}
-    .top-actions{display:flex;align-items:center;gap:12px}
-    .demo-tag{font-size:10px;font-weight:850;letter-spacing:1.4px;text-transform:uppercase;color:var(--blue);background:#edf4ff;border:1px solid #d9e8ff;border-radius:99px;padding:8px 12px}
-    .subtle-link{border:0;background:none;padding:8px 0;color:var(--muted);font-size:12px;font-weight:760}
-    .screen{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:22px 28px 26px}
-    .screen[hidden]{display:none!important}
-    .centered{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-    h1,h2,h3,p{margin:0}
-    h1{font-size:clamp(34px,5vw,52px);line-height:1.04;letter-spacing:-2px;font-weight:870;color:var(--navy)}
-    h2{font-size:clamp(28px,4vw,40px);line-height:1.08;letter-spacing:-1.5px;font-weight:850;color:var(--navy)}
-    .eyebrow{font-size:11px;font-weight:850;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue)}
-
-    .welcome{width:min(560px,100%)}
-    .welcome-hero{width:120px;height:120px;border-radius:30px;margin:0 auto 22px;display:grid;place-items:center;background:linear-gradient(145deg,#eaf2ff,#ffffff);border:1px solid #dfe9f7;box-shadow:0 14px 34px rgba(20,69,151,.10)}
-    .welcome-hero svg{width:60px;height:60px;color:var(--blue)}
-    .welcome .eyebrow{margin-bottom:10px}
-    .welcome h1{margin-bottom:10px}
-    .intro-meta{color:var(--muted);font-size:14px;margin-bottom:18px}
-    .welcome-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 20px}
-    .mini-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 10px;box-shadow:var(--card-shadow)}
-    .mini-icon{width:38px;height:38px;margin:0 auto 10px;border-radius:14px;display:grid;place-items:center;background:var(--sky);color:var(--blue)}
-    .mini-icon.green{background:var(--green-soft);color:var(--green)}
-    .mini-icon.gold{background:var(--gold-soft);color:var(--gold)}
-    .mini-icon svg{width:19px;height:19px}
-    .mini-card strong{display:block;font-size:13px;font-weight:820;color:var(--navy);letter-spacing:-.3px}
-    .name-wrap{display:flex;gap:12px;align-items:center;background:#fff;border:1.5px solid #cfd9e9;border-radius:18px;padding:10px 12px 10px 16px;box-shadow:0 6px 18px rgba(20,44,83,.04)}
-    .name-badge{width:42px;height:42px;border-radius:14px;background:#edf4ff;color:var(--blue);display:grid;place-items:center;flex:none}
-    .name-badge svg{width:20px;height:20px}
-    .name-field{border:0;outline:0;width:100%;min-width:0;font-size:18px;font-weight:700;color:var(--text);background:transparent}
-    .name-field::placeholder{color:#8c99ad;font-weight:550}
-    .field-error{min-height:18px;margin-top:6px;font-size:12px;color:#ba3b3b}
-    .btn{appearance:none;border:0;display:inline-flex;align-items:center;justify-content:center;gap:10px;border-radius:16px;min-height:56px;padding:12px 24px;font-size:16px;line-height:1.1;font-weight:820;white-space:nowrap;transition:transform .16s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease}
-    .btn:active{transform:scale(.985)}
-    .btn svg{width:18px;height:18px}
-    .btn-primary{background:linear-gradient(180deg,var(--blue),var(--blue-2));color:#fff;box-shadow:0 14px 28px rgba(20,92,222,.22)}
-    .btn-primary:hover{filter:brightness(.98)}
-    .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
-    .btn-secondary{background:#fff;color:var(--navy);border:1.5px solid #d8e1ee}
-    .btn-secondary:hover{background:#f8fbff}
-    .btn-start{width:100%;margin-top:6px}
-    .welcome-foot{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--muted);margin-top:16px;font-size:12px;font-weight:680}
-    .welcome-foot svg{width:16px;height:16px;color:var(--green)}
-
-    .exam-layout{display:flex;flex-direction:column;flex:1;min-height:0;gap:16px}
-    .exam-head{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
-    .stage-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-    .stage-card{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;border:1px solid var(--line);background:#fff;box-shadow:var(--card-shadow);min-width:0}
-    .stage-card.active{border-color:#bcd4ff;background:linear-gradient(180deg,#f8fbff 0,#eef5ff 100%)}
-    .stage-dot{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:var(--sky);color:var(--blue);flex:none;font-weight:850}
-    .stage-card.active .stage-dot{background:linear-gradient(180deg,var(--blue),var(--blue-2));color:#fff}
-    .stage-name{min-width:0;text-align:left}
-    .stage-name small{display:block;color:var(--muted);font-size:11px;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .stage-name strong{display:block;color:var(--navy);font-size:14px;line-height:1.1;letter-spacing:-.4px}
-    .counter-box{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 14px;box-shadow:var(--card-shadow);text-align:center;min-width:116px}
-    .counter-box small{display:block;font-size:10px;color:var(--muted);font-weight:820;letter-spacing:1px;text-transform:uppercase}
-    .counter-box strong{display:block;font-size:24px;color:var(--navy);font-weight:860;letter-spacing:-1px}
-    .progress{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
-    .progress span{height:10px;border-radius:999px;background:#e7edf5;transition:background .2s ease, transform .2s ease}
-    .progress span.done{background:linear-gradient(90deg,var(--blue),#6ea8ff);transform:scaleY(1.05)}
-
-    .question-panel{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(270px,.9fr);gap:16px}
-    .question-card,.visual-card{border:1px solid var(--line);background:#fff;border-radius:26px;box-shadow:var(--card-shadow);min-height:0}
-    .question-card{display:flex;flex-direction:column;padding:24px 22px}
-    .question-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#f5f8fd;color:var(--muted);font-size:11px;font-weight:830;letter-spacing:1px;text-transform:uppercase}
-    .pill .tiny{width:22px;height:22px;border-radius:8px;display:grid;place-items:center;background:#fff;border:1px solid #dce7f5;color:var(--blue)}
-    .pill .tiny svg{width:12px;height:12px}
-    .question-title{font-size:clamp(32px,4.5vw,54px);line-height:1.02;letter-spacing:-2px;font-weight:870;color:var(--navy);margin-bottom:18px;text-align:left}
-    .answers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:auto}
-    .answer{position:relative;min-height:128px;border-radius:22px;border:2px solid #dfe7f2;background:linear-gradient(180deg,#fff 0,#fbfdff 100%);box-shadow:0 8px 0 #f1f5fb;color:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:10px;transition:transform .15s ease,border-color .15s ease,background .15s ease,box-shadow .15s ease}
-    .answer:hover{transform:translateY(-2px);border-color:#8fb6ff;background:#f7fbff;box-shadow:0 10px 0 #edf3fc}
-    .answer.selected{border-color:var(--blue);background:linear-gradient(180deg,#f2f7ff,#e9f1ff);box-shadow:0 10px 0 #d9e7ff}
-    .answer-icon{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:#edf4ff;color:var(--blue);font-size:16px;font-weight:800}
-    .answer.selected .answer-icon{background:linear-gradient(180deg,var(--blue),var(--blue-2));color:#fff}
-    .answer strong{font-size:clamp(28px,4vw,38px);line-height:1;font-weight:860;letter-spacing:-1.5px}
-    .answer span{font-size:11px;font-weight:760;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-    .answer.selected::after{content:'✓';position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--green);color:#fff;font-size:13px;font-weight:900;box-shadow:0 6px 18px rgba(18,160,109,.28)}
-    .visual-card{display:flex;flex-direction:column;justify-content:space-between;padding:20px;overflow:hidden;background:linear-gradient(180deg,#fbfdff 0,#f4f8ff 100%)}
-    .visual-badge{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .visual-chip{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#fff;border:1px solid #dbe6f4;color:var(--navy);font-size:12px;font-weight:790}
-    .visual-big{flex:1;display:grid;place-items:center;padding:10px 0}
-    .math-icon{width:min(220px,100%);aspect-ratio:1/1;border-radius:28px;background:radial-gradient(circle at 30% 25%,#ffffff 0,#f3f8ff 58%,#e7effd 100%);border:1px solid #dce7f7;box-shadow:inset 0 1px 0 rgba(255,255,255,.7);display:grid;place-items:center;position:relative}
-    .math-symbol{font-size:88px;font-weight:880;line-height:1;letter-spacing:-4px;color:var(--blue)}
-    .float-chip{position:absolute;display:grid;place-items:center;width:52px;height:52px;border-radius:18px;background:#fff;border:1px solid #dbe7f6;box-shadow:0 10px 20px rgba(24,71,150,.10);font-weight:820;color:var(--navy)}
-    .float-chip.a{top:18px;left:18px}
-    .float-chip.b{top:22px;right:18px;color:var(--green)}
-    .float-chip.c{bottom:18px;left:22px;color:var(--gold)}
-    .float-chip.d{bottom:20px;right:18px}
-    .bottom-actions{display:flex;gap:12px;align-items:center;justify-content:space-between}
-    .bottom-actions .btn{min-width:160px}
-    .bottom-actions .btn-primary{margin-left:auto}
-
-    .celebration-wrap{position:relative;width:min(540px,100%);padding:28px 24px;border-radius:28px;border:1px solid #dfe8f3;background:linear-gradient(180deg,#ffffff 0,#f8fbff 100%);box-shadow:var(--shadow)}
-    .hero-trophy{width:110px;height:110px;margin:0 auto 16px;border-radius:28px;display:grid;place-items:center;background:radial-gradient(circle at top,#fff4d4 0,#ffe39b 56%,#ffd15b 100%);box-shadow:0 16px 30px rgba(203,145,31,.22)}
-    .hero-trophy svg{width:58px;height:58px;color:#8d6200}
-    .result-score{display:flex;align-items:end;justify-content:center;gap:8px;margin:14px 0 8px}
-    .result-score strong{font-size:clamp(46px,8vw,76px);font-weight:880;line-height:1;letter-spacing:-3px;color:var(--blue)}
-    .result-score span{font-size:15px;color:var(--muted);font-weight:730;padding-bottom:10px}
-    .result-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
-    .result-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 18px}
-    .stat-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:var(--card-shadow)}
-    .stat-card small{display:block;font-size:10px;color:var(--muted);font-weight:840;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
-    .stat-card strong{display:block;font-size:18px;color:var(--navy);font-weight:840;letter-spacing:-.6px}
-
-    .certificate-wrap{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px}
-    .certificate{position:relative;width:min(720px,100%);max-height:100%;padding:27px 30px 24px;border-radius:12px;background:#fff;border:3px solid var(--navy);box-shadow:var(--shadow);overflow:hidden}
-    .certificate::before{content:'';position:absolute;inset:8px;border:1.5px solid #dfb965;border-radius:4px;pointer-events:none}
-    .certificate::after{content:'✦';position:absolute;top:5px;right:16px;font-size:23px;color:#d2a957;pointer-events:none}
-    .certificate-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-    .certificate-brand{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:900;letter-spacing:1.6px;color:var(--blue);text-transform:uppercase}
-    .cert-mark{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--navy),#1b4fae);color:#fff;display:grid;place-items:center}
-    .cert-mark svg{width:18px;height:18px}
-    .certificate-ribbon{padding:8px 12px;border-radius:999px;background:var(--gold-soft);color:#8b650f;border:1px solid #f0dda4;font-size:11px;font-weight:850;letter-spacing:1px;text-transform:uppercase}
-    .certificate-main{text-align:center;padding:8px 6px 0}
-    .certificate-title{font-size:clamp(28px,4vw,44px);font-weight:870;line-height:1.02;color:var(--navy);letter-spacing:-1.7px;margin-bottom:6px}
-    .certificate-kind{font-size:12px;color:var(--gold);font-weight:860;letter-spacing:2px;text-transform:uppercase}
-    .certificate-name{font-size:clamp(30px,4vw,42px);line-height:1.04;font-weight:800;color:var(--navy);margin:20px auto 12px;padding:0 18px 10px;border-bottom:2px solid #e0e8f2;width:fit-content;max-width:100%;overflow-wrap:anywhere;letter-spacing:-1.3px}
-    .certificate-copy{font-size:14px;color:#5c6d86;max-width:540px;margin:0 auto}
-    .certificate-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;margin-top:20px;align-items:center}
-    .certificate-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    .fact-card{background:#fff;border:1px solid #dfe8f3;border-radius:18px;padding:13px 12px;box-shadow:var(--card-shadow);text-align:left}
-    .fact-card small{display:block;font-size:10px;color:var(--muted);font-weight:850;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
-    .fact-card b{display:block;font-size:14px;color:var(--navy);font-weight:840;letter-spacing:-.3px}
-    .certificate-side{display:flex;align-items:center;justify-content:center;gap:12px}
-    .seal{width:94px;height:94px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at top,#fff8e0 0,#ffe5a2 60%,#f9c24b 100%);border:6px solid #fff;box-shadow:0 16px 26px rgba(195,142,37,.25);position:relative}
-    .seal::before,.seal::after{content:'';position:absolute;bottom:-18px;width:18px;height:28px;background:linear-gradient(180deg,#e34c4c,#bf2e2e);clip-path:polygon(0 0,100% 0,100% 100%,50% 75%,0 100%)}
-    .seal::before{left:20px}.seal::after{right:20px}
-    .seal svg{width:42px;height:42px;color:#8a6108}
-    .certificate-note{text-align:center;font-size:11px;color:#8b97a9;margin-top:16px}
-    .certificate-actions{width:100%;justify-content:center}
-
-    .payment-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0}
-    .payment{width:min(560px,100%);padding:18px;border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,#fff 0,#fbfdff 100%);box-shadow:var(--shadow)}
-    .payment h2{text-align:center;margin-bottom:18px}
-    .order{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border:1px solid #dde7f4;border-radius:20px;background:#fff;box-shadow:var(--card-shadow)}
-    .order-name{font-size:16px;font-weight:820;color:var(--navy)}
-    .order-desc{font-size:12px;color:var(--muted);margin-top:3px}
-    .price{font-size:28px;font-weight:880;letter-spacing:-1px;color:var(--navy);white-space:nowrap}
-    .price small{font-size:12px;letter-spacing:.6px}
-    .pay-label{margin:16px 0 10px;font-size:12px;color:var(--muted);font-weight:820;letter-spacing:1px;text-transform:uppercase}
-    .pay-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    .pay-option{min-height:80px;border-radius:20px;border:2px solid #dfe7f2;background:#fff;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--navy);font-weight:820;box-shadow:var(--card-shadow)}
-    .pay-option .icon{width:36px;height:36px;border-radius:14px;display:grid;place-items:center;background:#eef4ff;color:var(--blue)}
-    .pay-option .icon svg{width:18px;height:18px}
-    .pay-option.selected{border-color:var(--blue);background:#eef5ff}
-    .pay-option.selected .icon{background:linear-gradient(180deg,var(--blue),var(--blue-2));color:#fff}
-    .payment .btn{width:100%;margin-top:16px}
-    .pay-note{margin-top:10px;text-align:center;font-size:12px;color:var(--muted)}
-
-    #confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;display:none}
-    @keyframes popIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-    .screen:not([hidden])>*{animation:popIn .26s ease}
-
-    @media (max-width:860px){
-      .shell{padding:0}
-      .app{width:100%;height:100svh;height:100dvh;border-radius:0;border:0;box-shadow:none}
-      .screen{padding:18px 18px max(18px,env(safe-area-inset-bottom))}
-      .topbar{padding:12px 18px;min-height:68px}
-      .brand{font-size:19px}
-      .welcome-cards{gap:8px}
-      .question-panel{grid-template-columns:1fr;gap:12px}
-      .visual-card{padding:14px;min-height:220px}
-      .math-icon{width:min(210px,72vw)}
-      .certificate-grid{grid-template-columns:1fr;gap:14px}
-      .certificate-side{justify-content:center}
-    }
-    @media (max-width:640px){
-      .welcome-cards,.result-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-      .mini-card,.stat-card{padding:10px 8px;border-radius:16px}
-      .mini-card strong,.stat-card strong{font-size:12px}
-      .mini-icon{width:34px;height:34px;border-radius:12px;margin-bottom:8px}
-      .screen{padding:16px 14px max(14px,env(safe-area-inset-bottom))}
-      .topbar{min-height:62px}
-      .top-actions{gap:8px}
-      .stage-strip{gap:8px}
-      .stage-card{padding:10px;border-radius:16px}
-      .stage-dot{width:34px;height:34px;border-radius:12px}
-      .stage-name strong{font-size:12px}
-      .stage-name small{font-size:10px}
-      .counter-box{min-width:90px;padding:10px}
-      .counter-box strong{font-size:20px}
-      .question-card{padding:16px}
-      .question-title{text-align:center;font-size:clamp(28px,8vw,42px);margin-bottom:14px}
-      .question-top{justify-content:center}
-      .answers{gap:10px}
-      .answer{min-height:102px;border-radius:18px}
-      .answer strong{font-size:30px}
-      .bottom-actions .btn{min-width:0;flex:1}
-      .bottom-actions .btn-primary{flex:1.2}
-      .certificate{padding:18px 16px 16px;border-radius:24px}
-      .certificate-facts{grid-template-columns:1fr;gap:10px}
-      .fact-card{text-align:center}
-      .payment{padding:14px}
-      .pay-option{min-height:72px;border-radius:18px}
-    }
-    @media (max-height:650px){
-      .shell{padding:0}
-      .app{height:100svh;height:100dvh;border-radius:0;border:0;box-shadow:none}
-      .topbar{min-height:54px;padding:8px 16px}
-      .brand{font-size:17px}
-      .brand-mark{width:34px;height:34px}
-      .screen{padding:10px 14px max(10px,env(safe-area-inset-bottom))}
-      .welcome-hero{width:84px;height:84px;border-radius:24px;margin-bottom:10px}.welcome-hero svg{width:42px;height:42px}
-      .welcome .eyebrow{margin-bottom:4px}.welcome h1{font-size:30px;margin-bottom:5px}.intro-meta{font-size:12px;margin-bottom:10px}
-      .welcome-cards{margin-bottom:10px}.mini-card{padding:9px 6px}.mini-icon{width:30px;height:30px;margin-bottom:5px}.mini-card strong{font-size:11px}
-      .name-wrap{padding:7px 10px 7px 12px;border-radius:14px}.name-badge{width:34px;height:34px;border-radius:11px}.name-field{font-size:15px}
-      .field-error{min-height:14px;margin-top:3px}.btn{min-height:44px;padding:8px 14px;font-size:13px;border-radius:12px}.welcome-foot{margin-top:8px;font-size:11px}
-      .exam-layout{gap:10px}.stage-card{padding:8px 10px}.stage-dot{width:28px;height:28px;border-radius:10px}.stage-name strong{font-size:11px}.stage-name small{font-size:9px}.counter-box{padding:8px 10px}.counter-box strong{font-size:18px}
-      .progress{gap:5px}.progress span{height:7px}
-      .question-card,.visual-card{border-radius:20px}.question-card{padding:12px}.question-top{margin-bottom:6px}.question-title{font-size:clamp(24px,4vw,34px);margin-bottom:10px}.answers{gap:8px}.answer{min-height:78px;border-radius:16px;box-shadow:0 5px 0 #f1f5fb}.answer-icon{width:26px;height:26px;border-radius:9px;font-size:12px}.answer strong{font-size:24px}.answer span{font-size:9px}.answer.selected::after{width:18px;height:18px;font-size:10px;top:7px;right:7px}
-      .visual-card{padding:10px}.visual-chip{padding:6px 9px;font-size:10px}.math-icon{width:150px;border-radius:22px}.math-symbol{font-size:62px}.float-chip{width:38px;height:38px;border-radius:13px;font-size:12px}
-      .celebration-wrap{padding:16px 14px;border-radius:24px}.hero-trophy{width:76px;height:76px;border-radius:20px;margin-bottom:9px}.hero-trophy svg{width:40px;height:40px}.result-score{margin:6px 0 4px}.result-score strong{font-size:48px}.result-score span{font-size:13px;padding-bottom:5px}.result-sub{font-size:12px;margin-bottom:10px}.stat-card{padding:8px}.stat-card small{font-size:8px}.stat-card strong{font-size:14px}
-      .certificate{padding:12px;border-radius:20px}.certificate-topline{margin-bottom:6px}.certificate-title{font-size:24px}.certificate-kind{font-size:10px}.certificate-name{font-size:24px;margin:10px auto 8px;padding-bottom:6px}.certificate-copy{font-size:11px}.certificate-grid{margin-top:12px;gap:10px}.fact-card{padding:9px}.fact-card small{font-size:9px}.fact-card b{font-size:12px}.seal{width:72px;height:72px}.seal svg{width:30px;height:30px}.certificate-note{font-size:9px;margin-top:8px}
-      .payment{padding:10px;border-radius:20px}.payment h2{margin-bottom:10px}.order{padding:10px 12px;border-radius:16px}.order-name{font-size:13px}.order-desc,.pay-note{font-size:10px}.price{font-size:22px}.pay-label{margin:10px 0 7px;font-size:10px}.pay-option{min-height:56px;padding:8px;border-radius:15px}.pay-option .icon{width:28px;height:28px;border-radius:10px}
-    }
-    /* Destello breve al avanzar: partículas decorativas, sin bloquear los controles. */
-    #magic-layer{position:fixed;inset:0;pointer-events:none;z-index:45;overflow:hidden}
-    .magic-spark{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);border-radius:3px;background:var(--spark-color);box-shadow:0 0 10px 2px var(--spark-color);opacity:0;animation:magicSpark .72s cubic-bezier(.12,.62,.24,1) var(--delay) forwards}
-    .magic-spark.star{clip-path:polygon(50% 0,61% 35%,98% 50%,61% 65%,50% 100%,39% 65%,2% 50%,39% 35%);border-radius:0}
-    .magic-flare{position:absolute;left:var(--x);top:var(--y);width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#ffffffed 0,#ffd75ca0 10%,#6ca5ff58 24%,transparent 63%);mix-blend-mode:screen;transform:translate(-50%,-50%) scale(.1);animation:magicFlare .58s ease-out forwards;opacity:0}
-    .question-panel.flash .question-card{animation:questionReveal .33s ease both}
-    @keyframes questionReveal{from{transform:translateY(8px);opacity:.7}to{transform:translateY(0);opacity:1}}
-    @keyframes magicSpark{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(0)}12%{opacity:1}68%{opacity:.95}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.1) rotate(var(--rot))}}
-    @keyframes magicFlare{0%{opacity:0;transform:translate(-50%,-50%) scale(.15)}12%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
-    @media (max-width:860px){
-      /* El certificado sigue siendo una sola hoja visible, no una columna de tarjetas. */
-      .certificate-grid{grid-template-columns:minmax(0,1fr) auto;gap:10px}
-      .certificate-side{justify-content:center}
-    }
-    @media (max-width:640px){
-      .exam-head{grid-template-columns:minmax(0,1fr) auto;gap:8px}
-      .stage-strip{gap:5px}
-      .stage-card{padding:7px 3px;flex-direction:column;gap:4px;justify-content:center;min-width:0;border-radius:14px;box-shadow:none}
-      .stage-dot{width:31px;height:31px;border-radius:10px;font-size:12px}
-      .stage-name{text-align:center}
-      .stage-name strong{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .stage-name small{display:none}
-      .counter-box{min-width:66px;padding:7px 5px;border-radius:14px;box-shadow:none}
-      .counter-box small{font-size:9px}
-      .counter-box strong{font-size:18px}
-      .exam-layout{gap:10px}
-      .question-panel{display:flex;flex:1;min-height:0}
-      .visual-card{display:none}
-      .question-card{flex:1;min-height:0;justify-content:center;padding:16px 12px 22px;gap:12px;border-radius:22px}
-      .question-top{justify-content:center;margin-bottom:0}
-      .question-title{margin:0;text-align:center;font-size:clamp(28px,8vw,43px)}
-      .answers{margin:4px 0 0;gap:8px}
-      .answer{min-height:105px;padding:8px 4px;gap:6px;box-shadow:0 4px 0 #f1f5fb}
-      .answer-icon{width:29px;height:29px;border-radius:9px;font-size:13px}
-      .answer strong{font-size:31px}
-      .answer span{font-size:9px;letter-spacing:.2px}
-      .certificate-wrap{gap:12px}
-      .certificate{padding:18px 14px 16px;border-width:2px;max-height:calc(100% - 55px);border-radius:8px}
-      .certificate::before{inset:5px;border-width:1px}
-      .certificate::after{font-size:15px;top:5px;right:8px}
-      .certificate-topline{margin-bottom:10px}
-      .certificate-brand{font-size:10px;gap:6px;letter-spacing:.4px}
-      .cert-mark{width:26px;height:26px;border-radius:8px}
-      .cert-mark svg{width:14px;height:14px}
-      .certificate-ribbon{font-size:8px;padding:5px 8px;letter-spacing:.2px}
-      .certificate-main{padding:0 2px}
-      .certificate-title{font-size:clamp(27px,7vw,37px)}
-      .certificate-kind{font-size:9px;letter-spacing:1.7px}
-      .certificate-name{font-size:clamp(25px,6.3vw,34px);margin:14px auto 8px;padding:0 5px 6px}
-      .certificate-copy{font-size:11px;line-height:1.35}
-      .certificate-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:14px}
-      .certificate-facts{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
-      .fact-card{padding:7px 4px;border-radius:8px;box-shadow:none;text-align:center;min-width:0}
-      .fact-card small{font-size:8px;letter-spacing:0;margin-bottom:4px}
-      .fact-card b{font-size:10px;overflow-wrap:anywhere}
-      .seal{width:54px;height:54px;border-width:3px;box-shadow:0 4px 10px #c7983740}
-      .seal svg{width:24px;height:24px}
-      .seal::before,.seal::after{bottom:-9px;width:10px;height:14px}
-      .seal::before{left:11px}.seal::after{right:11px}
-      .certificate-note{font-size:9px;margin-top:14px}
-      .certificate-actions{gap:8px}
-      .certificate-actions .btn{padding:10px 9px;min-width:0}
-    }
-    @media (min-width:641px) and (max-width:860px) and (max-height:580px){
-      .question-panel{display:flex;min-height:0}
-      .visual-card{display:none}
-      .question-card{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:5px 12px;gap:5px}
-      .question-top{margin-bottom:0}
-      .question-title{text-align:center;font-size:clamp(23px,3.7vw,30px);margin:0}
-      .answers{margin:0;width:min(470px,100%)}
-      .answer{min-height:55px;gap:2px;padding:3px 5px}
-      .answer-icon{width:22px;height:22px;font-size:10px}
-      .answer strong{font-size:25px}
-      .answer span{font-size:9px}
-      .stage-card{padding:6px 8px}
-      .stage-dot{width:28px;height:28px}
-      .counter-box{padding:6px 8px;min-width:80px}
-      .counter-box strong{font-size:18px}
-      .certificate{max-width:600px;padding:10px 20px}
-      .certificate-topline{margin-bottom:3px}
-      .certificate-title{font-size:25px}
-      .certificate-name{font-size:24px;margin:7px auto 5px}
-      .certificate-copy{font-size:11px}
-      .certificate-grid{margin-top:8px}
-      .certificate-note{margin-top:8px;margin-bottom:5px}
-      .certificate-wrap{gap:8px}
-      .seal{width:55px;height:55px}
-    }
-    @media (max-width:640px) and (max-height:690px){
-      .stage-card{flex-direction:row;gap:3px;padding:4px 2px}
-      .stage-name strong{font-size:9px}
-      .stage-dot{width:24px;height:24px;border-radius:8px;font-size:10px}
-      .exam-layout{gap:7px}
-      .progress span{height:5px}
-      .question-card{padding:9px 8px}
-      .question-title{font-size:clamp(22px,6.5vw,33px)}
-      .answer{min-height:67px;gap:3px}
-      .answer-icon{width:22px;height:22px;font-size:10px}
-      .answer strong{font-size:24px}
-      .answer span{font-size:8px}
-      .certificate{padding:9px 10px;max-height:calc(100% - 48px)}
-      .certificate-topline{margin-bottom:4px}
-      .certificate-title{font-size:23px}
-      .certificate-name{font-size:22px;margin:7px auto 5px}
-      .certificate-copy{font-size:10px}
-      .certificate-grid{margin-top:8px}
-      .certificate-note{margin-top:7px;font-size:8px}
-      .seal{width:46px;height:46px}
-    }
-    @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-    @media print{
-      @page{size:landscape;margin:10mm}
-      html,body{background:#fff!important;width:auto;height:auto}
-      .shell,.app,.screen,.certificate-wrap{width:100%!important;height:auto!important;max-width:none!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;overflow:visible!important;box-shadow:none!important}
-      .topbar,.certificate-actions,#confetti{display:none!important}
-      .screen:not(#certificate-screen){display:none!important}
-      #certificate-screen,.certificate-wrap{display:flex!important}
-      .certificate{width:100%!important;max-height:none!important;box-shadow:none!important;border:3px solid #102756!important;padding:34px!important}
-      .certificate::before{border-width:6px!important}
-      .certificate-title{font-size:42px}.certificate-name{font-size:40px}.certificate-copy{font-size:18px}.fact-card b{font-size:15px}.certificate-note{font-size:12px}
-    }
+    :root{color-scheme:light;--ink:#11202b;--muted:#72808c;--green:#10ad70;--green-dark:#078855;--bg:#f3f6f6;--line:#e5ebed;--radius:22px}
+    *{box-sizing:border-box}html{min-height:100%;background:#0b1520}body{margin:0;color:var(--ink);background:var(--bg);font:500 15px/1.4 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+    button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #79d4b3;outline-offset:3px}button:disabled{opacity:.55;cursor:not-allowed}p,h1,h2,h3{margin:0}svg{display:block}small{font-size:12px}strong{font-weight:800}
+    .shell{min-height:100dvh;display:flex;align-items:stretch;justify-content:center;padding:0}
+    .app{width:100%;max-width:1120px;min-height:100dvh;overflow:hidden;display:flex;flex-direction:column;background:#f6f8f8;box-shadow:0 20px 70px #08152129}
+    header{background:#101d28;color:white;padding:17px clamp(18px,4vw,38px) 21px;position:relative;isolation:isolate;overflow:hidden}
+    header:after{content:"";position:absolute;width:330px;height:330px;border-radius:50%;background:#0e765c80;filter:blur(70px);right:-180px;top:-240px;z-index:-1}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .logo{display:flex;gap:9px;align-items:center;font-size:20px;letter-spacing:-.7px;font-weight:800}.logo b{font-weight:900;color:#31d69b}.logo-icon{width:35px;height:35px;border-radius:10px;background:#123d35;display:grid;place-items:center;color:#40e5ab}
+    .version{font-size:10px;border:1px solid #ffffff2b;border-radius:100px;padding:6px 9px;color:#bacdd2;letter-spacing:1px;font-weight:800}
+    .greeting{margin-top:24px;color:#97b0ba;font-size:12px;letter-spacing:.12em;font-weight:800;text-transform:uppercase}.page-title{font-size:clamp(27px,5vw,36px);letter-spacing:-1.4px;margin-top:5px;font-weight:850}.page-sub{margin-top:5px;color:#a9c0c6;font-size:13px}
+    .tabs{margin-top:18px;display:flex;gap:8px}.tab{color:#a9c0c6;border:1px solid #ffffff22;border-radius:11px;background:#ffffff0b;padding:9px 14px;font-size:12px;font-weight:750;display:flex;align-items:center;gap:7px}.tab.active{background:#ffffff;color:#18292f;border-color:#fff}.tab svg{width:16px;height:16px}
+    main{padding:18px clamp(14px,3.6vw,34px) 30px;flex:1}.view[hidden]{display:none!important}.desktop-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(286px,.75fr);gap:18px;align-items:start}
+    .left-stack,.right-stack{display:flex;flex-direction:column;gap:15px}.card{background:white;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 24px rgba(17,37,42,.035);overflow:hidden}.balance{background:linear-gradient(130deg,#12372f 0%,#098d61 100%);color:white;padding:20px 23px;position:relative;isolation:isolate;min-height:140px}.balance:before{content:"";position:absolute;width:200px;height:200px;border:1px solid #ffffff29;border-radius:50%;right:-50px;top:-90px;box-shadow:0 0 0 38px #ffffff0b,0 0 0 75px #ffffff09;z-index:-1}.balance-top{display:flex;justify-content:space-between;align-items:center;color:#d1f5e5;font-size:12px;font-weight:650}.balance-amount{font-size:clamp(42px,7vw,53px);line-height:1;letter-spacing:-2px;margin:17px 0 10px;font-weight:850}.balance-bottom{display:flex;justify-content:space-between;align-items:center;color:#d9f8ed;font-size:11px}.balance-pill{background:#ffffff24;border:1px solid #ffffff32;border-radius:50px;padding:4px 9px;font-size:10px;font-weight:750}
+    .reader{padding:23px 20px 20px;text-align:center}.reader-head{display:flex;justify-content:space-between;align-items:center;text-align:left;margin-bottom:13px}.section-title{font-size:16px;font-weight:820;letter-spacing:-.4px}.live{display:flex;align-items:center;gap:6px;color:#788891;font-size:11px;font-weight:730;background:#f2f5f5;border:1px solid #e8ecec;border-radius:100px;padding:7px 10px}.live i{width:7px;height:7px;border-radius:50%;background:#9ba9ae}.live.active{color:#09734b;background:#e9fbf1;border-color:#caeedb}.live.active i{background:#12b376;box-shadow:0 0 0 4px #12b37617}.live.warn{background:#fff8e7;color:#9d6a13;border-color:#f7e3b9}.live.warn i{background:#e8a62d}
+    .scan-zone{position:relative;min-height:229px;display:grid;place-items:center;overflow:hidden}.rings{position:absolute;width:234px;height:234px;display:grid;place-items:center;left:50%;top:50%;transform:translate(-50%,-50%)}.rings span{position:absolute;display:block;border:1.5px solid #d6e8e0;border-radius:50%;width:110px;height:110px}.rings span:nth-child(2){width:165px;height:165px;opacity:.7}.rings span:nth-child(3){width:223px;height:223px;opacity:.42}.scanning .rings span{animation:breathe 2.8s ease-in-out infinite}.scanning .rings span:nth-child(2){animation-delay:.25s}.scanning .rings span:nth-child(3){animation-delay:.5s}@keyframes breathe{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.04);opacity:1}}
+    .tap-icon{width:104px;height:104px;border-radius:28px;background:linear-gradient(155deg,#e9f9f0,#f8fffb);border:1px solid #d6f2e1;box-shadow:0 12px 35px #04a16d18;display:grid;place-items:center;color:#0ba46a;position:relative}.tap-icon svg{width:54px;height:54px}.reader-label{font-size:17px;font-weight:800;letter-spacing:-.4px;margin:0 auto 5px}.reader-hint{font-size:12px;color:#86959a;max-width:310px;margin:0 auto;min-height:38px}.price-row{margin:14px 0 0;background:#f4f7f7;border:1px solid #edf0f0;border-radius:16px;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;text-align:left}.price-row span{color:#637681;font-size:12px}.price-row strong{font-size:22px;letter-spacing:-.7px}.control-primary{width:100%;background:linear-gradient(100deg,#0bad74,#078c5a);border:0;color:white;font-size:15px;font-weight:800;border-radius:14px;padding:14px 17px;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 9px 18px #069e6627}.control-primary[hidden]{display:none!important}.subtle-action{border:0;background:transparent;color:#6a8187;text-decoration:underline;font-size:11px;padding:10px;margin-top:4px}.subtle-action[hidden]{display:none!important}.notice{font-size:11px;color:#829398;margin-top:9px;line-height:1.45}.notice strong{color:#425b62}
+    .mini-header{display:flex;align-items:center;justify-content:space-between;padding:17px 18px 12px}.mini-link{border:0;background:none;color:#0b9165;font-size:12px;font-weight:800;padding:4px}.tx-list{padding:0 17px 10px}.tx-empty{color:#8b9ca3;font-size:12px;padding:20px 8px;text-align:center}.tx{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #eff2f2}.tx:last-child{border-bottom:0}.tx-ico{width:37px;height:37px;border-radius:12px;background:#e9f7f0;color:#089c67;display:grid;place-items:center;flex:none}.tx-ico.err{background:#fff1d6;color:#bf811d}.tx-ico svg{width:19px;height:19px}.tx-main{flex:1;min-width:0}.tx-name{font-size:12px;font-weight:800}.tx-date{font-size:10px;color:#84949c;margin-top:2px}.tx-amount{font-size:13px;font-weight:850}.pill-warning{font-size:10px;color:#ad7018;background:#fff4df;border-radius:9px;padding:4px 6px;display:inline-block;margin-top:4px}
+    .stats-card{padding:18px}.stat-line{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:16px}.stat-line:first-of-type{margin-top:12px}.stat-line span{font-size:12px;color:#849399}.stat-line strong{font-size:13px}.divider{border:0;border-top:1px solid #eff1f1;margin:16px 0}
+    .diag{background:#0e1b26;color:#d1e9e4;border-radius:18px;padding:16px}.diag h3{font-size:13px;display:flex;gap:8px;align-items:center;margin-bottom:9px}.diag p{font-size:11px;color:#a7bfc2;line-height:1.5}.diag-time{font-variant-numeric:tabular-nums;color:#57d9b0!important;margin-top:6px}
+    .info{padding:17px 18px}.info h2{font-size:14px;font-weight:820;margin-bottom:10px}.info p{font-size:12px;line-height:1.55;color:#71858e}.info p+p{margin-top:7px}.footer{color:#9aabb0;padding:12px 22px 20px;font-size:10px;text-align:center}
+    .settings{max-width:560px;margin:auto;display:flex;flex-direction:column;gap:15px}.settings .card{padding:20px}.settings h2{font-size:17px;margin-bottom:6px}.settings p{font-size:12px;color:#77888e;line-height:1.55;margin-bottom:14px}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-top:1px solid #e9eeee}.setting-row strong{display:block;font-size:13px}.setting-row small{display:block;color:#88969b;font-size:11px;margin-top:3px;max-width:320px}.toggle{width:50px;height:28px;border-radius:50px;background:#c5ced0;border:0;flex:none;padding:3px;transition:background .2s}.toggle:before{content:"";display:block;width:22px;height:22px;background:white;border-radius:50%;box-shadow:0 2px 5px #0002;transition:transform .2s}.toggle[aria-pressed="true"]{background:#0baa71}.toggle[aria-pressed="true"]:before{transform:translateX(22px)}.danger{background:#fff;border:1px solid #ffcdd2;color:#b23d4e;border-radius:13px;padding:12px 15px;font-weight:780;width:100%}.secondary-btn{background:#f0f3f3;border:1px solid #dbe3e4;border-radius:12px;padding:12px 16px;font-weight:800;color:#51636a}
+    .movements{max-width:720px;margin:auto}.movements .card{min-height:240px}.movements .tx-list{padding:5px 20px 15px}
+    .toast{position:fixed;left:50%;bottom:max(22px,env(safe-area-inset-bottom));transform:translate(-50%,30px);min-width:min(340px,calc(100% - 30px));max-width:440px;display:flex;align-items:center;gap:12px;color:#fff;background:#112b27;box-shadow:0 20px 60px #00251b55;padding:14px 16px;border-radius:17px;z-index:20;opacity:0;pointer-events:none;transition:.25s}.toast.show{transform:translate(-50%,0);opacity:1}.toast.warn{background:#624b19}.toast-icon{background:#16a776;border-radius:100px;width:37px;height:37px;display:grid;place-items:center;flex:none}.toast.warn .toast-icon{background:#aa7e2b}.toast strong{font-size:13px;display:block}.toast small{color:#d2e3df;display:block;margin-top:2px}.overlay{position:fixed;inset:0;background:#061b23b0;display:grid;place-items:center;padding:16px;z-index:40}.overlay[hidden]{display:none}.modal{background:white;width:min(390px,100%);padding:23px;border-radius:23px;box-shadow:0 20px 60px #0004}.modal h2{font-size:20px;margin:10px 0 6px}.modal p{font-size:13px;color:#75868a;line-height:1.5;margin-bottom:19px}.modal-actions{display:flex;gap:10px}.modal-actions button{flex:1}.modal-actions .control-primary{margin:0}.badge-demo{display:inline-flex;color:#96751b;background:#fff4cf;border:1px solid #f1e0a8;border-radius:8px;padding:6px 9px;font-size:10px;font-weight:850}
+    @media(min-width:900px){.app{min-height:calc(100dvh - 38px);margin:19px;border-radius:28px}.shell{background:#e9eff0}.reader{padding:22px 30px 25px}.scan-zone{min-height:247px}main{padding-top:22px}}
+    @media(max-width:760px){.desktop-grid{grid-template-columns:1fr}.stats-card{display:none}.info.desktop-info{display:none}.diag{order:2}.reader{order:1}.balance{min-height:134px}.right-stack{order:2}.left-stack{order:1}.reader{padding:16px 18px 19px}.reader-head{margin-bottom:1px}.scan-zone{min-height:208px}.rings{transform:translate(-50%,-50%) scale(.84)}.tap-icon{width:94px;height:94px}.reader-label{font-size:16px}.page-title{font-size:28px}.greeting{margin-top:20px}.tabs{margin-top:15px}header{padding-bottom:18px}.balance-amount{font-size:45px}.tx-list{padding-bottom:8px}}
+    @media(max-width:360px){.tab{padding:9px 10px}.version{display:none}.reader{padding:13px}.balance{padding:17px}.balance-amount{font-size:39px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
-  <canvas id="confetti" aria-hidden="true"></canvas>
-  <div id="magic-layer" aria-hidden="true"></div>
-  <div class="shell">
-    <main class="app" aria-label="IQ Examen - demostración">
-      <header class="topbar">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="m4 12 5 5L20 6" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </span>
-          IQ Examen
-        </div>
-        <div class="top-actions">
-          <span class="demo-tag">Demo</span>
-          <button class="subtle-link" id="reset-btn" type="button" hidden>Reiniciar</button>
-        </div>
-      </header>
-
-      <section class="screen" id="welcome-screen" aria-label="Inicio">
-        <div class="centered welcome">
-          <div class="welcome-hero" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 3.8 7.2 12 11.4l8.2-4.2L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 10.6V15.5C7 17.4 9.2 19 12 19s5-1.6 5-3.5v-4.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.2 7.4v5.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+<div class="shell"><div class="app">
+  <header>
+    <div class="top">
+      <div class="logo"><div class="logo-icon" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 8a6 6 0 0 1 0 8M9 5a10 10 0 0 1 0 14M14 9a4 4 0 0 1 0 6"/><circle cx="18" cy="12" r="2" fill="currentColor" stroke="none"/></svg></div><span><b>IQ</b> Wallet</span></div>
+      <div class="version">NFC · WEB <span style="color:#39dbad">●</span></div>
+    </div>
+    <div class="greeting">Terminal experimental · IQneting</div>
+    <h1 class="page-title">Cobros con un toque</h1>
+    <div class="page-sub">Escanea una etiqueta NFC y registra un cargo ficticio.</div>
+    <nav class="tabs" aria-label="Secciones">
+      <button type="button" class="tab active" data-view="terminal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M12 8v8"/></svg>Terminal</button>
+      <button type="button" class="tab" data-view="movements"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h16M4 14h16M4 20h10"/><circle cx="7" cy="4" r="1"/></svg>Movimientos</button>
+      <button type="button" class="tab" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2 2m10.2 10.2 2 2M19.1 4.9l-2 2M6.9 17.1l-2 2"/></svg>Ajustes</button>
+    </nav>
+  </header>
+  <main>
+    <section class="view" id="view-terminal" aria-label="Terminal NFC">
+      <div class="desktop-grid">
+        <div class="left-stack">
+          <div class="card balance">
+            <div class="balance-top"><span>Saldo virtual disponible</span><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e6fff4" stroke-width="1.8"><rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 10h18M7 6V3h12"/></svg></div>
+            <div class="balance-amount" id="balance-main">$100.00</div>
+            <div class="balance-bottom"><span>No es dinero real</span><span class="balance-pill">SALDO DEMO</span></div>
           </div>
-          <div class="eyebrow">Demostración interactiva</div>
-          <h1>Examen en línea</h1>
-          <p class="intro-meta">Rápido · Visual · Paso a paso</p>
-          <div class="welcome-cards" aria-hidden="true">
-            <div class="mini-card"><div class="mini-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></div><strong>3 bloques</strong></div>
-            <div class="mini-card"><div class="mini-icon green"><svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><strong>6 preguntas</strong></div>
-            <div class="mini-card"><div class="mini-icon gold"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4 14.2 8.6l5.1.7-3.7 3.6.9 5.1L12 15.9 7.5 18l.9-5.1-3.7-3.6 5.1-.7L12 4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><strong>Certificado</strong></div>
-          </div>
-          <form id="start-form" style="width:100%" autocomplete="on">
-            <label for="student-name" class="sr-only">Nombre del participante</label>
-            <div class="name-wrap">
-              <span class="name-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 1 1 14 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-              <input id="student-name" class="name-field" name="participant" placeholder="Nombre del participante" maxlength="55" autocomplete="name" required>
-            </div>
-            <div id="name-error" class="field-error" role="alert"></div>
-            <button class="btn btn-primary btn-start" type="submit">Comenzar <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          </form>
-          <div class="welcome-foot"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12 5 5L20 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Se guarda automáticamente en este dispositivo</div>
-        </div>
-      </section>
-
-      <section class="screen" id="exam-screen" aria-label="Examen" hidden>
-        <div class="exam-layout">
-          <div class="exam-head">
-            <div class="stage-strip" id="stage-strip" aria-label="Bloques del examen"></div>
-            <div class="counter-box"><small>Pregunta</small><strong id="question-count"></strong></div>
-          </div>
-          <div class="progress" id="progress" aria-label="Progreso del examen"></div>
-          <div class="question-panel">
-            <article class="question-card">
-              <div class="question-top">
-                <div class="pill"><span class="tiny" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 7h12M6 12h12M6 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span id="block-title">Bloque</span></div>
-              </div>
-              <h2 class="question-title" id="question-title"></h2>
-              <div class="answers" id="answer-list" role="group" aria-label="Opciones de respuesta"></div>
-            </article>
-            <aside class="visual-card" aria-hidden="true">
-              <div class="visual-badge">
-                <span class="visual-chip">Paso a paso</span>
-                <span class="visual-chip">1 respuesta</span>
-              </div>
-              <div class="visual-big">
-                <div class="math-icon">
-                  <div class="float-chip a">1</div>
-                  <div class="float-chip b">✓</div>
-                  <div class="float-chip c">+</div>
-                  <div class="float-chip d">?</div>
-                  <div class="math-symbol" id="math-symbol">+</div>
-                </div>
-              </div>
-            </aside>
-          </div>
-          <div class="bottom-actions">
-            <button type="button" class="btn btn-secondary" id="prev-question">Atrás</button>
-            <button type="button" class="btn btn-primary" id="next-question" disabled>Siguiente <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="card reader" id="reader-card">
+            <div class="reader-head"><h2 class="section-title">Lector NFC</h2><div id="live" class="live"><i></i><span id="live-label">Comprobando</span></div></div>
+            <div class="scan-zone" id="scan-zone"><div class="rings" aria-hidden="true"><span></span><span></span><span></span></div><div class="tap-icon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 22c-8 6-8 14 0 20M22 14C9 23 9 41 22 50M32 7c-21 14-21 36 0 50"/><rect x="36" y="20" width="16" height="25" rx="3" transform="rotate(16 44 32)"/><path d="m39 28 11 3"/></svg></div></div>
+            <h3 class="reader-label" id="reader-label">Preparando lector</h3>
+            <p class="reader-hint" id="reader-hint">Verificando si tu navegador admite NFC…</p>
+            <div class="price-row"><span>Descuento de demostración</span><strong>−$5.00</strong></div>
+            <button type="button" class="control-primary" id="activate" hidden>Activar lector NFC</button>
+            <button type="button" class="subtle-action" id="pause" hidden>Pausar lectura</button>
+            <div class="notice"><strong>Lectura física.</strong> Sin botones para simular cobros. Solo saldo ficticio en este navegador.</div>
           </div>
         </div>
-      </section>
-
-      <section class="screen" id="result-screen" aria-label="Resultado" hidden>
-        <div class="centered">
-          <div class="celebration-wrap">
-            <div class="hero-trophy" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4h10v2a5 5 0 0 1-10 0V4Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M9 14h6M10 18h4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M17 6h2a2 2 0 0 1-2 2M7 6H5a2 2 0 0 0 2 2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-            <h2>¡Examen terminado!</h2>
-            <div class="result-score"><strong id="score-value">0/6</strong><span>correctas</span></div>
-            <p class="result-sub">Demostración completada</p>
-            <div class="result-stats" aria-hidden="true">
-              <div class="stat-card"><small>Bloques</small><strong>3</strong></div>
-              <div class="stat-card"><small>Preguntas</small><strong>6</strong></div>
-              <div class="stat-card"><small>Estado</small><strong>Listo</strong></div>
-            </div>
-            <button id="see-certificate" class="btn btn-primary" type="button">Ver certificado <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="right-stack">
+          <div class="card stats-card">
+            <h2 class="section-title">Resumen de prueba</h2>
+            <div class="stat-line"><span>Cargos registrados</span><strong id="charges-count">0</strong></div>
+            <div class="stat-line"><span>Total descontado</span><strong id="charges-total">$0.00</strong></div>
+            <div class="stat-line"><span>Próxima lectura</span><strong id="next-read">Disponible</strong></div>
           </div>
-        </div>
-      </section>
-
-      <section class="screen" id="certificate-screen" aria-label="Certificado" hidden>
-        <div class="certificate-wrap">
-          <article class="certificate" aria-label="Certificado de participación">
-            <div class="certificate-topline">
-              <div class="certificate-brand"><span class="cert-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m4 12 5 5L20 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>IQ Examen</div>
-              <div class="certificate-ribbon">Documento demo</div>
-            </div>
-            <div class="certificate-main">
-              <div class="certificate-title">Certificado</div>
-              <div class="certificate-kind">de participación</div>
-              <div class="certificate-name" id="certificate-name"></div>
-              <p class="certificate-copy">Por completar satisfactoriamente la demostración de evaluación de matemáticas básicas.</p>
-            </div>
-            <div class="certificate-grid">
-              <div class="certificate-facts">
-                <div class="fact-card"><small>Resultado</small><b id="certificate-score"></b></div>
-                <div class="fact-card"><small>Fecha</small><b id="certificate-date"></b></div>
-                <div class="fact-card"><small>Folio</small><b id="certificate-folio"></b></div>
-              </div>
-              <div class="certificate-side">
-                <div class="seal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4 14.2 8.6l5.1.7-3.7 3.6.9 5.1L12 15.9 7.5 18l.9-5.1-3.7-3.6 5.1-.7L12 4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
-              </div>
-            </div>
-            <div class="certificate-note">Documento de demostración · Sin validez oficial</div>
-          </article>
-          <div class="bottom-actions certificate-actions">
-            <button class="btn btn-secondary" type="button" id="download-certificate">Guardar PDF</button>
-            <button class="btn btn-primary" type="button" id="certificate-next">Ir al pago <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="card">
+            <div class="mini-header"><h2 class="section-title">Últimos movimientos</h2><button type="button" class="mini-link" data-view="movements">Ver todos</button></div>
+            <div class="tx-list" id="recent-list"><div class="tx-empty">No hay cobros todavía.</div></div>
           </div>
-        </div>
-      </section>
-
-      <section class="screen" id="payment-screen" aria-label="Pago de demostración" hidden>
-        <div class="payment-wrap">
-          <div class="payment" id="payment-content">
-            <h2>Finalizar</h2>
-            <div class="order">
-              <div>
-                <div class="order-name">Certificado digital</div>
-                <div class="order-desc">Pago de demostración</div>
-              </div>
-              <div class="price">$99 <small>MXN</small></div>
-            </div>
-            <p class="pay-label">Elige cómo pagar</p>
-            <div class="pay-options" role="group" aria-label="Medio de pago">
-              <button type="button" class="pay-option selected" data-payment="Tarjeta" aria-pressed="true"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg></span>Tarjeta</button>
-              <button type="button" class="pay-option" data-payment="Transferencia" aria-pressed="false"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 9 12 4l8 5M6 10v8M12 10v8M18 10v8M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Transferencia</button>
-            </div>
-            <button class="btn btn-primary" id="simulate-payment" type="button">Simular pago <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-            <p class="pay-note">No se realiza ningún cobro real.</p>
+          <div class="diag" aria-live="polite">
+            <h3><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#43dba4" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg> Diagnóstico en vivo</h3>
+            <p id="diagnostic">Iniciando comprobación de compatibilidad.</p>
+            <p class="diag-time" id="diagnostic-time">Sin eventos todavía</p>
           </div>
+          <div class="card info desktop-info"><h2>Prueba segura y transparente</h2><p>El saldo pertenece a esta demostración local, no a las tarjetas. No se consulta, modifica ni cobra dinero en tarjetas bancarias, de transporte o de elevador.</p><p>Las tarjetas no NDEF podrían generar un aviso de error; Chrome no garantiza recibir ese evento. Puedes probar la opción experimental desde Ajustes.</p></div>
         </div>
-      </section>
-    </main>
-  </div>
-
-  <script>
-    'use strict';
-    const storageKey = 'iq-examen-corporativo-v3';
-    const questions = [
-      { block:'01 · Sumas', stage:0, symbol:'+', question:'¿Cuánto es 2 + 3?', options:[4,5,6], right:5 },
-      { block:'01 · Sumas', stage:0, symbol:'+', question:'¿Cuánto es 4 + 1?', options:[3,5,7], right:5 },
-      { block:'02 · Restas', stage:1, symbol:'−', question:'¿Cuánto es 6 − 2?', options:[3,4,5], right:4 },
-      { block:'02 · Restas', stage:1, symbol:'−', question:'¿Cuánto es 8 − 3?', options:[4,5,6], right:5 },
-      { block:'03 · Números', stage:2, symbol:'>', question:'¿Cuál es el mayor?', options:[6,9,4], right:9 },
-      { block:'03 · Números', stage:2, symbol:'+', question:'¿Cuánto es 2 + 2?', options:[3,4,5], right:4 }
-    ];
-    const stageMeta = [
-      { num:'01', title:'Sumas', caption:'Operaciones básicas' },
-      { num:'02', title:'Restas', caption:'Resolución rápida' },
-      { num:'03', title:'Números', caption:'Comparación simple' }
-    ];
-    const $ = selector => document.querySelector(selector);
-    const screens = ['welcome','exam','result','certificate','payment'];
-    const freshState = () => ({ screen:'welcome', name:'', current:0, answers:Array(questions.length).fill(null), finishedAt:null, folio:null, paymentMethod:'Tarjeta', paid:false });
-    function restore() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(storageKey));
-        if (!saved || typeof saved !== 'object' || !screens.includes(saved.screen) ||
-            !Array.isArray(saved.answers) || saved.answers.length !== questions.length ||
-            typeof saved.name !== 'string' || !Number.isInteger(saved.current) ||
-            saved.current < 0 || saved.current >= questions.length) return freshState();
-        saved.name = saved.name.slice(0,55);
-        saved.answers = saved.answers.map((answer,i) => questions[i].options.includes(answer) ? answer : null);
-        if (!saved.name.trim()) return freshState();
-        if (['result','certificate','payment'].includes(saved.screen) && !saved.answers.every(a => a !== null)) saved.screen='exam';
-        saved.paymentMethod = ['Tarjeta','Transferencia'].includes(saved.paymentMethod) ? saved.paymentMethod : 'Tarjeta';
-        saved.paid = Boolean(saved.paid);
-        return saved;
-      } catch { return freshState(); }
-    }
-    let state = restore();
-    let rafId = 0;
-    function save(){ try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch {} }
-    function correctCount(){ return questions.reduce((t,q,i)=>t + (q.right===state.answers[i] ? 1 : 0),0); }
-    let magicBusy = false;
-    function burstMagic(){
-      if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const layer = $('#magic-layer');
-      const target = $('#question-title');
-      const rect = target.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      layer.replaceChildren();
-      const flare = document.createElement('span');
-      flare.className = 'magic-flare';
-      flare.style.setProperty('--x', centerX + 'px');
-      flare.style.setProperty('--y', centerY + 'px');
-      layer.appendChild(flare);
-      const palette = ['#ffd85c','#ffeeb0','#6fafff','#ffffff','#21d7ae','#c0ddff'];
-      const count = 32;
-      for(let i=0;i<count;i++){
-        const a = (i/count) * Math.PI*2 + Math.random()*.23;
-        const distance = 65 + Math.random()*120;
-        const spark = document.createElement('span');
-        spark.className = 'magic-spark' + (i%3===0 ? ' star' : '');
-        spark.style.setProperty('--x',centerX + 'px');
-        spark.style.setProperty('--y',centerY + 'px');
-        spark.style.setProperty('--dx',Math.cos(a)*distance+'px');
-        spark.style.setProperty('--dy',Math.sin(a)*distance+'px');
-        spark.style.setProperty('--rot',(Math.random()*540-270)+'deg');
-        spark.style.setProperty('--size',(5+Math.random()*9)+'px');
-        spark.style.setProperty('--delay',(Math.random()*.09)+'s');
-        spark.style.setProperty('--spark-color',palette[i%palette.length]);
-        layer.appendChild(spark);
-      }
-      setTimeout(()=>{ if(!magicBusy) layer.replaceChildren(); },950);
-    }
-
-    function buildStageStrip(){
-      const currentStage = questions[state.current].stage;
-      $('#stage-strip').replaceChildren(...stageMeta.map((item,index)=>{
-        const card=document.createElement('div');
-        card.className='stage-card' + (currentStage===index ? ' active' : '');
-        card.innerHTML=`<div class="stage-dot">${item.num}</div><div class="stage-name"><strong>${item.title}</strong><small>${item.caption}</small></div>`;
-        return card;
-      }));
-    }
-    function show(screen, celebrate=false){
-      state.screen=screen;
-      screens.forEach(name => { $(`#${name}-screen`).hidden = name !== screen; });
-      $('#reset-btn').hidden = screen === 'welcome';
-      if(screen === 'exam') renderQuestion();
-      if(screen === 'result') {
-        $('#score-value').textContent = `${correctCount()}/${questions.length}`;
-        if(celebrate) launchConfetti();
-      }
-      if(screen === 'certificate') renderCertificate();
-      if(screen === 'payment') renderPayment();
-      if(screen === 'welcome') $('#student-name').value = state.name;
-      save();
-    }
-    function renderQuestion(){
-      const q = questions[state.current];
-      buildStageStrip();
-      $('#block-title').textContent = q.block;
-      $('#question-count').textContent = `${state.current + 1}/${questions.length}`;
-      $('#question-title').textContent = q.question;
-      $('#math-symbol').textContent = q.symbol;
-      $('#progress').replaceChildren(...questions.map((_,i)=>{
-        const part=document.createElement('span');
-        if(i <= state.current) part.className='done';
-        return part;
-      }));
-      const nodes = q.options.map((option,index)=>{
-        const btn=document.createElement('button');
-        btn.type='button';
-        btn.className='answer' + (state.answers[state.current]===option ? ' selected' : '');
-        btn.setAttribute('aria-pressed', String(state.answers[state.current]===option));
-        btn.setAttribute('aria-label', `Respuesta ${option}`);
-        btn.innerHTML = `<div class="answer-icon">${index + 1}</div><strong>${option}</strong><span>Seleccionar</span>`;
-        btn.addEventListener('click', ()=>{ state.answers[state.current]=option; save(); renderQuestion(); });
-        return btn;
-      });
-      $('#answer-list').replaceChildren(...nodes);
-      $('#next-question').disabled = state.answers[state.current]===null;
-      $('#next-question').innerHTML = state.current===questions.length-1
-        ? 'Terminar <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12 5 5L20 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-        : 'Siguiente <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    }
-    function nextQuestion(){
-      if(magicBusy || state.answers[state.current]===null) return;
-      magicBusy = true;
-      burstMagic();
-      $('#next-question').disabled = true;
-      setTimeout(()=>{
-        if(state.current < questions.length-1){
-          state.current++;
-          show('exam');
-          const panel = $('.question-panel');
-          panel.classList.remove('flash');
-          void panel.offsetWidth;
-          panel.classList.add('flash');
-        } else {
-          if(!state.finishedAt) state.finishedAt = new Date().toISOString();
-          if(!state.folio) state.folio = 'IQ-' + Date.now().toString(36).toUpperCase().slice(-7);
-          show('result', true);
-        }
-        magicBusy = false;
-        setTimeout(()=>$('#magic-layer').replaceChildren(),750);
-      },170);
-    }
-    function goBack(){
-      if(state.screen==='exam'){
-        if(state.current>0){ state.current--; show('exam'); }
-        else show('welcome');
-      } else if(state.screen==='certificate') show('result');
-      else if(state.screen==='payment') show('certificate');
-    }
-    function renderCertificate(){
-      $('#certificate-name').textContent = state.name;
-      $('#certificate-score').textContent = `${correctCount()} de ${questions.length}`;
-      $('#certificate-date').textContent = new Date(state.finishedAt || Date.now()).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
-      $('#certificate-folio').textContent = state.folio || 'DEMO';
-    }
-    function renderPayment(){
-      if(state.paid){
-        $('#payment-content').innerHTML = `<div class="centered"><div class="hero-trophy" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4 14.2 8.6l5.1.7-3.7 3.6.9 5.1L12 15.9 7.5 18l.9-5.1-3.7-3.6 5.1-.7L12 4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><h2>¡Pago simulado!</h2><p class="result-sub" style="margin:12px 0 18px">Demostración completada. No hubo ningún cargo.</p><button class="btn btn-primary" id="new-demo" type="button">Nueva demostración</button></div>`;
-        $('#new-demo').addEventListener('click', reset);
-        launchConfetti();
-        return;
-      }
-      $('#payment-content').innerHTML = `<h2>Finalizar</h2><div class="order"><div><div class="order-name">Certificado digital</div><div class="order-desc">Pago de demostración</div></div><div class="price">$99 <small>MXN</small></div></div><p class="pay-label">Elige cómo pagar</p><div class="pay-options" role="group" aria-label="Medio de pago"><button type="button" class="pay-option" data-payment="Tarjeta"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg></span>Tarjeta</button><button type="button" class="pay-option" data-payment="Transferencia"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 9 12 4l8 5M6 10v8M12 10v8M18 10v8M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Transferencia</button></div><button class="btn btn-primary" id="simulate-payment" type="button">Simular pago <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><p class="pay-note">No se realiza ningún cobro real.</p>`;
-      document.querySelectorAll('[data-payment]').forEach(btn=>{
-        const active = state.paymentMethod === btn.dataset.payment;
-        btn.classList.toggle('selected', active);
-        btn.setAttribute('aria-pressed', String(active));
-        btn.addEventListener('click', ()=>{ state.paymentMethod = btn.dataset.payment; save(); renderPayment(); });
-      });
-      $('#simulate-payment').addEventListener('click', ()=>{ state.paid=true; save(); renderPayment(); });
-    }
-    function reset(){
-      stopConfetti();
-      magicBusy=false;
-      $('#magic-layer').replaceChildren();
-      state=freshState();
-      save();
-      show('welcome');
-      $('#student-name').value='';
-      $('#name-error').textContent='';
-    }
-    $('#start-form').addEventListener('submit', event=>{
-      event.preventDefault();
-      const name = $('#student-name').value.trim().replace(/\s+/g,' ');
-      if(name.length < 2){ $('#name-error').textContent='Escribe tu nombre para comenzar'; $('#student-name').focus(); return; }
-      $('#name-error').textContent='';
-      state=freshState();
-      state.name=name;
-      show('exam');
-    });
-    $('#next-question').addEventListener('click', nextQuestion);
-    $('#prev-question').addEventListener('click', goBack);
-    $('#see-certificate').addEventListener('click', ()=>show('certificate'));
-    $('#certificate-next').addEventListener('click', ()=>show('payment'));
-    $('#download-certificate').addEventListener('click', ()=>window.print());
-    $('#reset-btn').addEventListener('click', reset);
-    document.addEventListener('keydown', event=>{
-      if(state.screen!=='exam' || event.altKey || event.ctrlKey || event.metaKey) return;
-      const i=Number(event.key)-1;
-      if(i>=0 && i<questions[state.current].options.length && !event.repeat){
-        state.answers[state.current]=questions[state.current].options[i]; save(); renderQuestion();
-      }
-      if(event.key==='Enter' && !event.repeat){ event.preventDefault(); nextQuestion(); }
-    });
-    function stopConfetti(){
-      cancelAnimationFrame(rafId);
-      const c = $('#confetti');
-      c.style.display='none';
-      const ctx = c.getContext('2d');
-      if(ctx){ ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,c.width,c.height); }
-    }
-    function launchConfetti(){
-      if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      stopConfetti();
-      const canvas = $('#confetti');
-      const ctx = canvas.getContext('2d');
-      if(!ctx) return;
-      const ratio = Math.min(2, window.devicePixelRatio || 1);
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      canvas.width = Math.round(w * ratio);
-      canvas.height = Math.round(h * ratio);
-      canvas.style.display='block';
-      ctx.setTransform(ratio,0,0,ratio,0,0);
-      const colors=['#145cde','#0f8dff','#15a372','#ffd053','#ff6a6a','#102756'];
-      const particles = Array.from({length:220}, (_,i)=>({
-        x: Math.random()*w,
-        y: -20 - Math.random()*h*.7,
-        size: 4 + Math.random()*8,
-        speedY: 2.8 + Math.random()*4.8,
-        speedX: -1.8 + Math.random()*3.6,
-        rot: Math.random()*Math.PI*2,
-        vr: -0.15 + Math.random()*.3,
-        color: colors[Math.floor(Math.random()*colors.length)],
-        shape: i % 5
-      }));
-      const start = performance.now();
-      function star(x,y,r,color,rot){
-        ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.fillStyle=color; ctx.beginPath();
-        for(let i=0;i<5;i++){ ctx.lineTo(Math.cos((18+i*72)*Math.PI/180)*r, -Math.sin((18+i*72)*Math.PI/180)*r); ctx.lineTo(Math.cos((54+i*72)*Math.PI/180)*(r*0.45), -Math.sin((54+i*72)*Math.PI/180)*(r*0.45)); }
-        ctx.closePath(); ctx.fill(); ctx.restore();
-      }
-      function frame(now){
-        ctx.clearRect(0,0,w,h);
-        const elapsed = now - start;
-        particles.forEach(p=>{
-          p.y += p.speedY; p.x += p.speedX + Math.sin((p.y+p.rot)/28)*.35; p.rot += p.vr;
-          ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color;
-          if(p.shape===0){ ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*.68); }
-          else if(p.shape===1){ ctx.beginPath(); ctx.arc(0,0,p.size*.45,0,Math.PI*2); ctx.fill(); }
-          else if(p.shape===2){ ctx.beginPath(); ctx.moveTo(0,-p.size*.6); ctx.lineTo(p.size*.55,p.size*.5); ctx.lineTo(-p.size*.55,p.size*.5); ctx.closePath(); ctx.fill(); }
-          else if(p.shape===3){ ctx.fillRect(-p.size*.15,-p.size*.7,p.size*.3,p.size*1.4); }
-          else { ctx.restore(); star(p.x,p.y,p.size*.55,p.color,p.rot); return; }
-          ctx.restore();
-        });
-        if(elapsed < 3800) rafId = requestAnimationFrame(frame); else stopConfetti();
-      }
-      rafId = requestAnimationFrame(frame);
-    }
-    show(state.screen);
-  </script>
+      </div>
+    </section>
+    <section class="view movements" id="view-movements" hidden>
+      <div class="card"><div class="mini-header"><h2 class="section-title">Historial local</h2><span class="badge-demo">DEMO</span></div><div class="tx-list" id="all-list"></div></div>
+    </section>
+    <section class="view settings" id="view-settings" hidden>
+      <div class="card"><h2>Lecturas experimentales</h2><p>Chrome lee mensajes NDEF y puede avisar que hubo un problema con una tarjeta cercana. El aviso de error no identifica ni verifica la tarjeta.</p>
+        <div class="setting-row"><div><strong>Descontar en eventos de error NFC</strong><small>Solo para la demo: si Chrome emite <code>readingerror</code>, descuenta $5 con etiqueta «no verificado». Puede producir falsos positivos.</small></div><button type="button" id="toggle-error-charge" class="toggle" aria-pressed="false" aria-label="Descuento experimental por readingerror"></button></div>
+        <div class="setting-row"><div><strong>Protección contra duplicados</strong><small>Entre dos cargos se esperan al menos 8 segundos. Mantén la tarjeta alejada después de cada lectura.</small></div><span style="font-size:12px;color:#0e9468;font-weight:850;white-space:nowrap">Siempre activa</span></div>
+      </div>
+      <div class="card"><h2>Herramientas de prueba</h2><p>Reinicia saldo virtual a $100 y limpia movimientos. No altera ninguna tarjeta ni requiere una base de datos.</p><button type="button" class="danger" id="reset">Reiniciar saldo e historial</button></div>
+      <div class="card"><h2>Compatibilidad</h2><p>Requiere HTTPS, Google Chrome para Android, permiso NFC y pantalla encendida con la pestaña visible. Tras conceder permiso, intentará leer automáticamente al volver a abrirse.</p><p>Una tarjeta del Metro, bancaria o de acceso puede activar el NFC de Android y aun así no generar ningún evento accesible desde esta web.</p><p><strong>Por seguridad:</strong> no se guardan números de tarjetas, contenidos NDEF ni identificadores NFC en el historial.</p></div>
+    </section>
+  </main>
+  <div class="footer">IQNETING · Prototipo de laboratorio · Sin pagos reales · v1.0</div>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><div class="toast-icon" id="toast-icon"><svg width="24" height="24" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="m4 12 5 5 11-11"/></svg></div><div><strong id="toast-title">Cobro registrado</strong><small id="toast-desc">Nuevo saldo: $95.00</small></div></div>
+<div class="overlay" id="confirm-reset" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title"><span class="badge-demo">SALDO FICTICIO</span><h2 id="confirm-title">¿Reiniciar demostración?</h2><p>El saldo regresará a $100 y se eliminarán todos los movimientos de este navegador.</p><div class="modal-actions"><button type="button" class="secondary-btn" id="cancel-reset">Cancelar</button><button type="button" class="control-primary" id="confirm-reset-button">Reiniciar</button></div></div></div>
+<script>
+(() => {
+  'use strict';
+  const STORAGE_KEY = 'iqneting.wallet.nfc.lab.v1';
+  const CHARGE_CENTS = 500;
+  const INITIAL_CENTS = 10000;
+  const COOLDOWN_MS = 8000;
+  const el = id => document.getElementById(id);
+  let state = load();
+  let scanner = null;
+  let aborter = null;
+  let isScanning = false;
+  let isStarting = false;
+  let hasManualPause = false;
+  let lastDebitAt = 0;
+  let toastTimeout = 0;
+  let lastDiagnostic = '';
+  const shortTime = time => new Intl.DateTimeFormat('es-MX',{dateStyle:'short',timeStyle:'short'}).format(new Date(time));
+  const money = cents => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(cents/100);
+  function load(){try{const raw=JSON.parse(localStorage.getItem(STORAGE_KEY));if(raw&&Number.isInteger(raw.balance)&&raw.balance>=0&&raw.balance<=10000000&&Array.isArray(raw.items))return {balance:raw.balance,items:raw.items.slice(0,100),errorDebit:raw.errorDebit===true};}catch(e){}return {balance:INITIAL_CENTS,items:[],errorDebit:true};}
+  function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){diagnostic('Almacenamiento local no disponible; el saldo se perderá al recargar.');}}
+  function iconMarkup(warn){return warn?'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg>':'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8a6 6 0 0 1 0 8m4-12a11 11 0 0 1 0 16m4-12a5 5 0 0 1 0 8"/></svg>';}
+  function renderList(container, items){container.replaceChildren();if(!items.length){const empty=document.createElement('div');empty.className='tx-empty';empty.textContent='Todavía no hay movimientos. Acerca una etiqueta NFC para probar.';container.append(empty);return;}for(const entry of items){const item=document.createElement('div');item.className='tx';const icon=document.createElement('div');icon.className='tx-ico'+(entry.source==='error'?' err':'');icon.innerHTML=iconMarkup(entry.source==='error');const main=document.createElement('div');main.className='tx-main';const name=document.createElement('div');name.className='tx-name';name.textContent=entry.source==='error'?'Evento NFC no verificado':'Cobro NFC confirmado';main.append(name);const date=document.createElement('div');date.className='tx-date';date.textContent=shortTime(entry.time);main.append(date);if(entry.source==='error'){const warn=document.createElement('span');warn.className='pill-warning';warn.textContent='Señal sin identificar';main.append(warn);}const amount=document.createElement('div');amount.className='tx-amount';amount.textContent='−'+money(CHARGE_CENTS);item.append(icon,main,amount);container.append(item);}}
+  function render(){el('balance-main').textContent=money(state.balance);el('charges-count').textContent=String(state.items.length);el('charges-total').textContent=money(state.items.length*CHARGE_CENTS);el('toggle-error-charge').setAttribute('aria-pressed',String(state.errorDebit));renderList(el('recent-list'),state.items.slice(0,3));renderList(el('all-list'),state.items);}
+  function status(mode,label,headline,hint){const live=el('live');live.className='live '+(mode==='active'?'active':mode==='warn'?'warn':'');el('live-label').textContent=label;el('reader-label').textContent=headline;el('reader-hint').textContent=hint;el('scan-zone').classList.toggle('scanning',mode==='active');}
+  function diagnostic(message){lastDiagnostic=message;el('diagnostic').textContent=message;el('diagnostic-time').textContent='Último evento: '+new Date().toLocaleTimeString('es-MX');}
+  function showToast(title,description,warn=false){el('toast-title').textContent=title;el('toast-desc').textContent=description;el('toast').className='toast show'+(warn?' warn':'');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el('toast').classList.remove('show'),3400);}
+  function feedback(){try{navigator.vibrate?.(85);}catch(e){}try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;const ctx=new Audio();const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(840,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(1050,ctx.currentTime+.12);g.gain.setValueAtTime(.0001,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.07,ctx.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.22);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.23);setTimeout(()=>ctx.close().catch(()=>{}),450);}catch(e){}}
+  function takeCharge(source){const now=Date.now();if(now-lastDebitAt<COOLDOWN_MS){diagnostic('Lectura recibida, pero se ignoró por protección contra cobro duplicado.');return;}lastDebitAt=now;if(state.balance<CHARGE_CENTS){showToast('Saldo insuficiente','No se ha descontado nada.',true);diagnostic('Evento NFC detectado. Rechazado por saldo insuficiente.');return;}state.balance-=CHARGE_CENTS;state.items.unshift({time:now,source});state.items=state.items.slice(0,100);save();render();const verified=source==='ndef';showToast(verified?'Cobro de prueba registrado':'Descuento experimental',verified?'Etiqueta NDEF leída · Saldo '+money(state.balance):'Lectura no verificada · Saldo '+money(state.balance),!verified);diagnostic(verified?'Lectura NDEF confirmada: se descontaron $5 ficticios.':'Se detectó readingerror: se descontaron $5 ficticios sin verificar ni identificar tarjeta.');feedback();}
+  function onRead(event){const count=event.message?.records?.length ?? 0;diagnostic('Web NFC recibió una lectura NDEF con '+count+' registro(s). No se almacenó su contenido.');takeCharge('ndef');}
+  function onReadError(){diagnostic('Evento readingerror: el navegador detectó un problema NFC, pero NO identificó la tarjeta.');if(state.errorDebit){takeCharge('error');}else{showToast('NFC detectado, lectura fallida','No se realizó descuento. Activa el modo experimental en Ajustes.',true);}}
+  function setStartButton(text){el('activate').hidden=false;el('activate').textContent=text||'Activar lector NFC';el('activate').disabled=false;}
+  function showActive(){status('active','Escuchando','Acerca una etiqueta NFC','Lector activo. Acerca una etiqueta NFC a la parte trasera del teléfono.');el('activate').hidden=true;el('pause').hidden=false;}
+  function stopScanner(){aborter?.abort();aborter=null;scanner=null;isScanning=false;isStarting=false;}
+  async function beginScan(){if(isStarting||isScanning)return;if(!('NDEFReader'in window)){status('warn','No compatible','Web NFC no disponible','Abre esta página con Google Chrome en Android usando HTTPS.');diagnostic('El navegador no expone NDEFReader. No podemos acceder al lector NFC desde esta página.');setStartButton('NFC no disponible en este navegador');el('activate').disabled=true;return;}
+    if(!window.isSecureContext){status('warn','HTTPS requerido','Conexión no segura','Publica esta página en HTTPS para permitir Web NFC.');diagnostic('El sitio necesita HTTPS para usar Web NFC.');setStartButton('Requiere HTTPS');el('activate').disabled=true;return;}
+    hasManualPause=false;isStarting=true;el('activate').disabled=true;status('','Iniciando','Conectando con NFC','Chrome puede solicitar permiso para usar el lector.');diagnostic('Solicitando activación del lector NFC…');
+    try{const controller=new AbortController();aborter=controller;scanner=new NDEFReader();scanner.addEventListener('reading',onRead);scanner.addEventListener('readingerror',onReadError);await scanner.scan({signal:controller.signal});isScanning=true;showActive();diagnostic('Escaneo activo. Esperando eventos Web NFC reales.');}catch(error){stopScanner();let explanation='Comprueba NFC, permisos y navegador.';if(error?.name==='NotAllowedError')explanation='Permiso denegado: habilita NFC para este sitio en Chrome.';if(error?.name==='NotSupportedError')explanation='No se encontró un adaptador Web NFC compatible o NFC está apagado.';if(error?.name==='InvalidStateError')explanation='Hay un escaneo NFC en curso. Actualiza la página.';status('warn','Sin acceso','No se pudo activar NFC',explanation);diagnostic('Error '+(error?.name||'desconocido')+': '+(error?.message||explanation));setStartButton('Volver a intentar');el('pause').hidden=true;}finally{isStarting=false;}}
+  async function autoStart(){if(!('NDEFReader'in window)||!window.isSecureContext){await beginScan();return;}try{if(!navigator.permissions?.query)throw new Error('Permisos no consultables');const perm=await navigator.permissions.query({name:'nfc'});if(perm.state==='granted'){diagnostic('Permiso NFC previamente autorizado. Inicio automático.');await beginScan();}else{status('warn','Permiso inicial','Activa NFC una vez','Pulsa el botón para conceder acceso. En próximas visitas intentará conectarse solo.');setStartButton('Activar lector NFC');diagnostic(perm.state==='denied'?'Permiso NFC bloqueado desde la configuración del navegador.':'Se necesita autorización inicial del usuario.');}}
+    catch(error){status('warn','Permiso inicial','Autoriza el lector NFC','Pulsa Activar NFC para iniciar el lector físico.');setStartButton('Activar lector NFC');diagnostic('No se pudo consultar permiso NFC; requiere activación manual.');}}
+  const views=['terminal','movements','settings'];function showView(view){for(const name of views){el('view-'+name).hidden=name!==view;}document.querySelectorAll('[data-view]').forEach(node=>{if(node.classList.contains('tab'))node.classList.toggle('active',node.dataset.view===view);});if(view==='terminal')window.scrollTo({top:0,behavior:'instant'});}
+  document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>showView(btn.dataset.view)));
+  el('activate').addEventListener('click',beginScan);
+  el('pause').addEventListener('click',()=>{hasManualPause=true;stopScanner();status('warn','Pausado','Lectura detenida','Vuelve a activar el lector cuando quieras continuar.');setStartButton('Reanudar NFC');el('pause').hidden=true;diagnostic('Lectura detenida manualmente.');});
+  el('toggle-error-charge').addEventListener('click',()=>{state.errorDebit=!state.errorDebit;save();render();diagnostic(state.errorDebit?'Modo experimental activo: readingerror descontará $5 ficticios.':'Modo experimental apagado: readingerror solo notificará.');});
+  el('reset').addEventListener('click',()=>el('confirm-reset').hidden=false);
+  el('cancel-reset').addEventListener('click',()=>el('confirm-reset').hidden=true);
+  el('confirm-reset-button').addEventListener('click',()=>{state.balance=INITIAL_CENTS;state.items=[];lastDebitAt=0;save();render();el('confirm-reset').hidden=true;showToast('Demostración reiniciada','Saldo restaurado a $100.00');diagnostic('Saldo local restablecido. El lector NFC sigue disponible.');});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){diagnostic('Pestaña no visible: Chrome suspende temporalmente el acceso NFC.');}else if(isScanning){showActive();diagnostic('Pestaña visible: esperando nuevas lecturas NFC.');}else if(!hasManualPause){autoStart();}});
+  setInterval(()=>{const seconds=Math.max(0,Math.ceil((COOLDOWN_MS-(Date.now()-lastDebitAt))/1000));el('next-read').textContent=seconds>0?seconds+' s':'Disponible';},450);
+  render();autoStart();
+})();
+</script>
 </body>
 </html>
