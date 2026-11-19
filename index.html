@@ -206,7 +206,7 @@ body.rc-focused main{padding:10px 13px 14px}
               <div class="rc-write-options" aria-label="Saldo a escribir"><button type="button" data-rc-write-amount="10000" class="active" aria-pressed="true">$100</button><button type="button" data-rc-write-amount="20000" aria-pressed="false">$200</button><button type="button" data-rc-write-amount="50000" aria-pressed="false">$500</button></div>
               <div class="rc-v3-line"><span>SALDO A GRABAR EN EL CHIP</span><strong id="rc-new-id">$100.00 · ID automático</strong></div>
               <div class="rc-v3-actions"><button type="button" class="rc-v3-primary" id="rc-write"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 16 4-.7L19 5l-4-4L5 11z"/><path d="M4 21h16"/></svg><span id="rc-write-label">Grabar $100 en sticker</span></button><button type="button" class="rc-v3-secondary" id="rc-cancel" hidden>Cancelar</button></div>
-              <div class="rc-amounts-note">Sobrescribe la etiqueta y asigna ID nuevo. Solo stickers tuyos; mantén la etiqueta pegada hasta confirmar.</div>
+              <div class="rc-amounts-note">Grabación manual, sin recargas duplicadas. Retira la tarjeta entre operaciones; el NFC seguirá escuchando.</div>
             </div>
             <div class="rc-v3-pane" id="rc-pane-topup" hidden>
               <div class="rc-v3-balance" id="rc-balance-card"><div><span>SALDO EN EL STICKER</span><strong id="rc-balance">$0.00</strong></div><div class="rc-v3-demo">DEMO</div></div>
@@ -232,7 +232,7 @@ body.rc-focused main{padding:10px 13px 14px}
       <div class="card"><h2>Compatibilidad</h2><p>Requiere HTTPS, Google Chrome para Android, permiso NFC y pantalla encendida con la pestaña visible. Tras conceder permiso, intentará leer automáticamente al volver a abrirse.</p><p>Una tarjeta del Metro, bancaria o de acceso puede activar el NFC de Android y aun así no generar ningún evento accesible desde esta web.</p><p><strong>Por seguridad:</strong> no se guardan números de tarjetas, contenidos NDEF ni identificadores NFC en el historial.</p></div>
     </section>
   </main>
-  <div class="footer">IQNETING · Prototipo de laboratorio · Sin pagos reales · v1.4</div>
+  <div class="footer">IQNETING · Prototipo de laboratorio · Sin pagos reales · v1.5</div>
 </div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"><div class="toast-icon" id="toast-icon"><svg width="24" height="24" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="m4 12 5 5 11-11"/></svg></div><div><strong id="toast-title">Cobro registrado</strong><small id="toast-desc">Nuevo saldo: $95.00</small></div></div>
 <div class="overlay" id="confirm-reset" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title"><span class="badge-demo">SALDO FICTICIO</span><h2 id="confirm-title">¿Reiniciar demostración?</h2><p>El saldo regresará a $100 y se eliminarán todos los movimientos de este navegador.</p><div class="modal-actions"><button type="button" class="secondary-btn" id="cancel-reset">Cancelar</button><button type="button" class="control-primary" id="confirm-reset-button">Reiniciar</button></div></div></div>
@@ -343,6 +343,7 @@ body.rc-focused main{padding:10px 13px 14px}
   /* IQ Wallet: saldo y recargas físicamente en etiquetas NDEF IQW2. */
   let rcTag=null,rcAmount=10000,rcWriteAmount=10000,rcMode='read';
   let rcReadAbort=null,rcWriteAbort=null,rcReader=null;
+  let rcGuardAbort=null,rcGuardReader=null,rcGuardStarting=false,rcLastWrittenAt=0;
   function rcStatus(a,b,cls=''){
     const node=el('rc-status');node.className='rc-status '+cls;node.replaceChildren();
     const title=document.createElement('strong'),sub=document.createElement('small');
@@ -355,6 +356,50 @@ body.rc-focused main{padding:10px 13px 14px}
     el('rc-topup').textContent='Acercar sticker para +'+money(rcAmount);
   }
   function rcStopRead(){rcReadAbort?.abort();rcReadAbort=null;rcReader=null;el('rc-read').disabled=false;el('rc-stop').hidden=true;}
+  function rcStopGuard(){
+    rcGuardAbort?.abort();rcGuardAbort=null;rcGuardReader=null;rcGuardStarting=false;
+  }
+  // Monitor NFC en Escribir y Recargar. La lectura nunca cobra ni sobrescribe sin un boton.
+  async function rcStartGuard(){
+    if(currentView!=='recharges'||!['write','topup'].includes(rcMode)||document.hidden||rcGuardAbort||rcGuardStarting||rcWriteAbort)return;
+    if(!('NDEFReader' in window)||!isSecureContext)return;
+    const mode=rcMode;rcGuardStarting=true;
+    try{
+      try{
+        const permission=await navigator.permissions.query({name:'nfc'});
+        if(permission.state!=='granted')return;
+      }catch(e){/* El navegador gestiona el permiso. */}
+      if(currentView!=='recharges'||rcMode!==mode||document.hidden||rcWriteAbort||rcGuardAbort)return;
+      const ctl=new AbortController();rcGuardAbort=ctl;
+      const n=new NDEFReader();rcGuardReader=n;
+      n.addEventListener('reading',event=>{
+        if(ctl.signal.aborted||rcWriteAbort||currentView!=='recharges'||rcMode!==mode)return;
+        const c=readCard(event);
+        if(c&&!c.invalid){
+          rcTag=c;rcRefresh();
+          if(Date.now()-rcLastWrittenAt>1100){
+            if(mode==='write')rcStatus('Tarjeta NFC detectada','Saldo actual '+money(c.cents)+'. Pulsa Grabar solo si quieres sobrescribir.','good');
+            else rcStatus('Tarjeta NFC detectada','Saldo actual '+money(c.cents)+'. Pulsa Recargar para agregar.','good');
+          }
+        }else if(Date.now()-rcLastWrittenAt>1100){
+          rcStatus('Tarjeta NFC detectada','No tiene saldo IQ Wallet. Usa Escribir para programarla.','warn');
+        }
+      });
+      n.addEventListener('readingerror',()=>{
+        if(!ctl.signal.aborted&&!rcWriteAbort&&Date.now()-rcLastWrittenAt>1100)
+          rcStatus('Etiqueta no legible','Usa NTAG213, NTAG215 o NTAG216 compatible con NDEF.','warn');
+      });
+      await n.scan({signal:ctl.signal});
+      if(!ctl.signal.aborted&&!rcWriteAbort){
+        rcStatus(mode==='write'?'Lector listo para escribir':'Lector NFC preparado',
+          mode==='write'?'Selecciona saldo y pulsa Grabar. NFC sigue escuchando.':'Selecciona importe y pulsa Recargar. NFC sigue escuchando.','busy');
+      }
+    }catch(e){
+      if(rcGuardAbort){rcGuardAbort?.abort();rcGuardAbort=null;rcGuardReader=null;}
+      if(e.name!=='AbortError'&&currentView==='recharges'&&rcMode===mode)
+        rcStatus('No se pudo mantener NFC activo','Puedes intentar de nuevo. '+(e.message||e.name),'warn');
+    }finally{rcGuardStarting=false;}
+  }
   function rcStopWrite(){
     rcWriteAbort?.abort();rcWriteAbort=null;
     el('rc-read').disabled=false;el('rc-write').disabled=false;el('rc-topup').disabled=false;
@@ -367,7 +412,7 @@ body.rc-focused main{padding:10px 13px 14px}
   function rcId(){const b=new Uint8Array(12);crypto.getRandomValues(b);return Array.from(b,x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();}
   function rcSetMode(mode){
     if(mode===rcMode)return;
-    rcStopRead();rcStopWrite();el('rc-read').hidden=true;el('rc-convert').hidden=true;rcMode=mode;
+    rcStopRead();rcStopGuard();rcStopWrite();el('rc-read').hidden=true;el('rc-convert').hidden=true;rcMode=mode;
     for(const m of ['read','write','topup'])el('rc-pane-'+m).hidden=m!==mode;
     document.querySelectorAll('[data-rc-mode]').forEach(b=>{
       const active=b.dataset.rcMode===mode;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
@@ -376,6 +421,7 @@ body.rc-focused main{padding:10px 13px 14px}
     const tips={read:'Lee saldo del chip y actualiza tarjetas con formato anterior.',write:'Graba un formato NFC interno para reducir avisos externos.',topup:'Añade saldo al mismo ID, físicamente en el sticker.'};
     rcStatus(...labels[mode]);el('rc-v3-tip').textContent=tips[mode];
     if(mode==='read'&&currentView==='recharges')void rcAutoRead();
+    if(mode!=='read'&&currentView==='recharges')void rcStartGuard();
   }
   document.querySelectorAll('[data-rc-mode]').forEach(b=>b.addEventListener('click',()=>rcSetMode(b.dataset.rcMode)));
   document.querySelectorAll('[data-rc-write-amount]').forEach(b=>b.addEventListener('click',()=>{
@@ -430,24 +476,26 @@ body.rc-focused main{padding:10px 13px 14px}
   async function rcWrite(){
     if(!('NDEFReader'in window)||!isSecureContext){rcStatus('NFC no disponible','Usa Chrome Android y HTTPS.','warn');return;}
     if(rcWriteAbort)return;
-    stopScanner();rcStopRead();rcTag=null;rcRefresh();
+    stopScanner();rcStopRead();
     const card={id:rcId(),cents:rcWriteAmount,rev:0};
     const ctl=new AbortController();rcWriteAbort=ctl;
     el('rc-new-id').textContent=money(card.cents)+' · '+card.id.slice(-8);
     el('rc-write').disabled=true;el('rc-read').disabled=true;el('rc-cancel').hidden=false;
     rcStatus('Grabando '+money(card.cents)+'…','Mantén un sticker TUYO junto al teléfono.','busy');
     try{
-      await new NDEFReader().write(cardMessage(card),{overwrite:true,signal:ctl.signal});
-      rcTag=card;rcRefresh();rcStatus('¡Saldo grabado!','Escritura confirmada: '+money(card.cents),'good');
+      await (rcGuardReader||new NDEFReader()).write(cardMessage(card),{overwrite:true,signal:ctl.signal});
+      rcTag=card;rcLastWrittenAt=Date.now();rcRefresh();rcStatus('¡Saldo grabado!','Escritura confirmada: '+money(card.cents)+'. NFC sigue activo.','good');
       el('rc-result').textContent=card.id.slice(-8)+' · '+money(card.cents);
       showToast('Sticker programado',money(card.cents)+' grabados en NFC');feedback();
     }catch(e){rcStatus(e.name==='AbortError'?'Escritura cancelada':'No se pudo escribir',e.message||'No se confirmó el saldo NFC.','warn');}
-    finally{rcWriteAbort=null;el('rc-write').disabled=false;el('rc-read').disabled=false;el('rc-cancel').hidden=true;}
+    finally{rcWriteAbort=null;el('rc-write').disabled=false;el('rc-read').disabled=false;el('rc-cancel').hidden=true;
+      if(currentView==='recharges'&&rcMode==='write'&&!document.hidden&&!rcGuardAbort)void rcStartGuard();
+    }
   }
   async function rcTopup(){
     if(!('NDEFReader'in window)||!isSecureContext){rcStatus('NFC no disponible','Usa Chrome Android y HTTPS.','warn');return;}
     if(rcWriteAbort)return;
-    stopScanner();rcStopRead();rcTag=null;rcRefresh();
+    stopScanner();rcStopRead();rcStopGuard();rcTag=null;rcRefresh();
     const ctl=new AbortController();rcWriteAbort=ctl;
     el('rc-topup').disabled=true;el('rc-read').disabled=true;el('rc-topup-cancel').hidden=false;
     rcStatus('Buscando sticker…','Acerca y mantén tu sticker IQ Wallet.','busy');
@@ -458,23 +506,23 @@ body.rc-focused main{padding:10px 13px 14px}
         if(working)return;working=true;
         const card=readCard(event);
         if(!card||card.invalid){
-          rcStatus('Sticker no válido','Solo se recargan etiquetas IQ Wallet IQW2.','warn');rcNote('No se escribió ninguna recarga.',true);rcStopWrite();return;
+          rcStatus('Sticker no válido','Solo se recargan etiquetas IQ Wallet IQW2.','warn');rcNote('No se escribió ninguna recarga.',true);rcStopWrite();void rcStartGuard();return;
         }
-        if(card.cents+rcAmount>MAX_TAG_CENTS){rcStatus('Límite alcanzado','Excede el saldo máximo de prueba.','warn');rcStopWrite();return;}
+        if(card.cents+rcAmount>MAX_TAG_CENTS){rcStatus('Límite alcanzado','Excede el saldo máximo de prueba.','warn');rcStopWrite();void rcStartGuard();return;}
         const next={id:card.id,cents:card.cents+rcAmount,rev:card.rev+1};
         rcStatus('Escribiendo recarga…','Mantén el MISMO sticker en el teléfono.','busy');
         const timer=setTimeout(()=>ctl.abort(),5500);
         try{
           await n.write(cardMessage(next),{overwrite:true,signal:ctl.signal});
-          rcTag=next;rcRefresh();rcStatus('¡Recarga grabada!','Saldo nuevo: '+money(next.cents),'good');
+          rcTag=next;rcLastWrittenAt=Date.now();rcRefresh();rcStatus('¡Recarga grabada!','Saldo nuevo: '+money(next.cents)+'. NFC sigue activo.','good');
           rcNote('Se conserva el ID, saldo físico actualizado.');
           showToast('Recarga NFC',money(next.cents)+' en etiqueta');feedback();
         }catch(e){rcStatus('Recarga no confirmada','Relee el sticker para conocer el saldo.','warn');rcNote('No se confirmó la escritura.',true);}
-        finally{clearTimeout(timer);rcStopWrite();}
+        finally{clearTimeout(timer);rcStopWrite();if(currentView==='recharges'&&rcMode==='topup')void rcStartGuard();}
       });
       n.addEventListener('readingerror',()=>rcStatus('Sin datos legibles','Acerca una etiqueta IQ Wallet.','warn'));
       await n.scan({signal:ctl.signal});
-    }catch(e){if(e.name!=='AbortError')rcStatus('No se pudo comenzar',e.message||'Revisa NFC.','warn');rcStopWrite();}
+    }catch(e){if(e.name!=='AbortError')rcStatus('No se pudo comenzar',e.message||'Revisa NFC.','warn');rcStopWrite();if(currentView==='recharges'&&rcMode==='topup')void rcStartGuard();}
   }
   async function rcConvert(){
     if(!rcTag||rcWriteAbort)return;
@@ -493,9 +541,9 @@ body.rc-focused main{padding:10px 13px 14px}
   el('rc-read').addEventListener('click',rcRead);
   el('rc-stop').addEventListener('click',()=>{rcStopRead();rcStatus('Lectura detenida','Inténtalo nuevamente.');});
   el('rc-write').addEventListener('click',rcWrite);
-  el('rc-cancel').addEventListener('click',()=>{rcStopWrite();rcStatus('Cancelado','No se confirmó escritura.','warn');});
+  el('rc-cancel').addEventListener('click',()=>{rcStopWrite();rcStatus('Cancelado','No se confirmó escritura.','warn');if(currentView==='recharges'&&rcMode==='write')void rcStartGuard();});
   el('rc-topup').addEventListener('click',rcTopup);
-  el('rc-topup-cancel').addEventListener('click',()=>{rcStopWrite();rcStatus('Cancelado','Relee el saldo antes de reintentar.','warn');});
+  el('rc-topup-cancel').addEventListener('click',()=>{rcStopWrite();rcStatus('Cancelado','Relee el saldo antes de reintentar.','warn');if(currentView==='recharges'&&rcMode==='topup')void rcStartGuard();});
   rcRefresh();
 
   const views=['terminal','recharges','movements','settings'];
@@ -507,7 +555,7 @@ body.rc-focused main{padding:10px 13px 14px}
       stopScanner();el('pause').hidden=true;el('activate').hidden=true;
       status('','Pausado','Terminal en pausa','Regresa a Terminal para reactivar los cobros.');
     }
-    if(currentView==='recharges'){rcStopRead();rcStopWrite();}
+    if(currentView==='recharges'){rcStopRead();rcStopGuard();rcStopWrite();}
     currentView=view;
     for(const name of views)el('view-'+name).hidden=name!==view;
     document.querySelectorAll('[data-view]').forEach(node=>{
@@ -515,7 +563,7 @@ body.rc-focused main{padding:10px 13px 14px}
     });
     window.scrollTo({top:0,behavior:'instant'});
     if(view==='terminal'&&!hasManualPause)autoStart();
-    if(view==='recharges'&&rcMode==='read')void rcAutoRead();
+    if(view==='recharges'){if(rcMode==='read')void rcAutoRead();else void rcStartGuard();}
   }
   document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>showView(btn.dataset.view)));
   el('activate').addEventListener('click',beginScan);
@@ -526,7 +574,7 @@ body.rc-focused main{padding:10px 13px 14px}
   el('confirm-reset-button').addEventListener('click',()=>{state.balance=INITIAL_CENTS;state.items=[];lastDebitAt=0;save();render();el('confirm-reset').hidden=true;showToast('Demostración reiniciada','Saldo restaurado a $100.00');diagnostic('Saldo local restablecido. El lector NFC sigue disponible.');});
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden){diagnostic('Pestaña no visible: Chrome suspende temporalmente el acceso NFC.');return;}
-    if(currentView==='recharges'&&rcMode==='read')void rcAutoRead();
+    if(currentView==='recharges'){if(rcMode==='read')void rcAutoRead();else void rcStartGuard();}
     if(currentView==='terminal'&&!hasManualPause){if(isScanning){showActive();diagnostic('Pestaña visible: esperando nuevas lecturas NFC.');}else void autoStart();}
   });
   setInterval(()=>{const seconds=Math.max(0,Math.ceil((COOLDOWN_MS-(Date.now()-lastDebitAt))/1000));el('next-read').textContent=seconds>0?seconds+' s':'Disponible';},450);
