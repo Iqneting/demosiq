@@ -200,7 +200,7 @@ body.rc-focused main{padding:10px 13px 14px}
           <div class="rc-v3-stage">
             <div class="rc-v3-pane" id="rc-pane-read">
               <div class="rc-v3-line"><span>IDENTIFICADOR DETECTADO</span><strong id="rc-result">Sin lecturas todavía</strong></div>
-              <div class="rc-v3-actions"><button type="button" class="rc-v3-primary" id="rc-read"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8a6 6 0 0 0 0 8M8 5a10 10 0 0 0 0 14M14 9a5 5 0 0 0 0 6"/><rect x="18" y="9" width="4" height="6" rx="1"/></svg>Activar lectura NFC</button><button type="button" class="rc-v3-secondary" id="rc-stop" hidden>Detener</button></div>
+              <div class="rc-v3-actions"><button type="button" class="rc-v3-primary" id="rc-read"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8a6 6 0 0 0 0 8M8 5a10 10 0 0 0 0 14M14 9a5 5 0 0 0 0 6"/><rect x="18" y="9" width="4" height="6" rx="1"/></svg>Activar lectura NFC</button><button type="button" class="rc-v3-secondary" id="rc-stop" hidden>Detener</button></div><div class="rc-v3-actions"><button type="button" class="rc-v3-secondary" id="rc-convert" hidden>Actualizar formato NFC · conservar saldo</button></div>
             </div>
             <div class="rc-v3-pane" id="rc-pane-write" hidden>
               <div class="rc-write-options" aria-label="Saldo a escribir"><button type="button" data-rc-write-amount="10000" class="active" aria-pressed="true">$100</button><button type="button" data-rc-write-amount="20000" aria-pressed="false">$200</button><button type="button" data-rc-write-amount="50000" aria-pressed="false">$500</button></div>
@@ -277,6 +277,10 @@ body.rc-focused main{padding:10px 13px 14px}
     return {id:p[1],cents,rev};
   }
   function cardText(c){return 'IQW2|'+c.id+'|'+c.cents+'|'+c.rev;}
+  // Registro MIME propietario para que Android no abra automaticamente el visor generico de texto.
+  // Samsung/Android controla el despacho NFC fuera de Chrome; la ausencia del visor NO esta garantizada.
+  const IQW_MIME='application/vnd.iqneting.wallet';
+  function cardMessage(c){return {records:[{recordType:'mime',mediaType:IQW_MIME,data:new TextEncoder().encode(cardText(c))}]};}
   async function debitCard(card){
     physicalCard=card;render();
     if(physicalBusy||Date.now()-lastDebitAt<COOLDOWN_MS){diagnostic('Sticker leído. Espera 8 segundos antes de otro cobro.');return;}
@@ -295,7 +299,7 @@ body.rc-focused main{padding:10px 13px 14px}
     diagnostic('Lectura IQW2 válida. Grabando saldo nuevo '+money(updated.cents)+'.');
     try{
       if(!reader)throw Error('Se perdió la conexión con NFC.');
-      await reader.write(cardText(updated),{overwrite:true,signal:ctrl.signal});
+      await reader.write(cardMessage(updated),{overwrite:true,signal:ctrl.signal});
       physicalCard=updated;lastDebitAt=Date.now();
       state.items.unshift({time:lastDebitAt,source:'sticker',card:card.id});
       state.items=state.items.slice(0,100);save();render();
@@ -354,19 +358,19 @@ body.rc-focused main{padding:10px 13px 14px}
     el('rc-cancel').hidden=true;el('rc-topup-cancel').hidden=true;
   }
   function rcDecode(record){
-    if(record.recordType!=='text'&&record.recordType!=='url')return '';
+    if(record.recordType!=='text'&&record.recordType!=='url'&&!(record.recordType==='mime'&&record.mediaType===IQW_MIME))return '';
     try{return new TextDecoder(record.encoding||'utf-8').decode(record.data);}catch(e){return '';}
   }
   function rcId(){const b=new Uint8Array(12);crypto.getRandomValues(b);return Array.from(b,x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();}
   function rcSetMode(mode){
     if(mode===rcMode)return;
-    rcStopRead();rcStopWrite();rcMode=mode;
+    rcStopRead();rcStopWrite();el('rc-convert').hidden=true;rcMode=mode;
     for(const m of ['read','write','topup'])el('rc-pane-'+m).hidden=m!==mode;
     document.querySelectorAll('[data-rc-mode]').forEach(b=>{
       const active=b.dataset.rcMode===mode;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
     });
     const labels={read:['Listo para leer','Acerca tu sticker después de activar NFC.'],write:['Listo para escribir','Elige $100, $200 o $500.'],topup:['Listo para recargar','Selecciona el importe y acerca un sticker IQ Wallet.']};
-    const tips={read:'Lee el saldo escrito físicamente en el sticker.',write:'Sobrescribe el chip con un ID nuevo y saldo ficticio.',topup:'Añade saldo al mismo ID, físicamente en el sticker.'};
+    const tips={read:'Lee saldo del chip y actualiza tarjetas con formato anterior.',write:'Graba un formato NFC interno para reducir avisos externos.',topup:'Añade saldo al mismo ID, físicamente en el sticker.'};
     rcStatus(...labels[mode]);el('rc-v3-tip').textContent=tips[mode];
   }
   document.querySelectorAll('[data-rc-mode]').forEach(b=>b.addEventListener('click',()=>rcSetMode(b.dataset.rcMode)));
@@ -382,7 +386,7 @@ body.rc-focused main{padding:10px 13px 14px}
   async function rcRead(){
     if(!('NDEFReader' in window)||!isSecureContext){rcStatus('No compatible','Usa Chrome Android y HTTPS.','warn');return;}
     if(rcWriteAbort)return;
-    stopScanner();rcStopRead();rcTag=null;rcRefresh();
+    stopScanner();rcStopRead();rcTag=null;rcRefresh();el('rc-convert').hidden=true;
     const ctl=new AbortController();rcReadAbort=ctl;el('rc-read').disabled=true;el('rc-stop').hidden=false;
     rcStatus('Buscando sticker…','Acércalo a la parte trasera del teléfono.','busy');el('rc-result').textContent='Esperando NFC físico…';
     try{
@@ -391,7 +395,9 @@ body.rc-focused main{padding:10px 13px 14px}
         const c=readCard(e);rcTag=c&&!c.invalid?c:null;
         if(rcTag){
           el('rc-result').textContent=rcTag.id.slice(-8)+' · '+money(rcTag.cents)+' · v'+rcTag.rev;
-          rcStatus('¡Sticker reconocido!','Saldo grabado: '+money(rcTag.cents),'good');rcNote('Saldo leído desde el chip NFC.');feedback();
+          rcStatus('¡Sticker reconocido!','Saldo grabado: '+money(rcTag.cents),'good');rcNote('Saldo leído desde el chip NFC.');
+          const oldTextTag=Array.from(e.message?.records||[]).some(x=>x.recordType==='text'&&rcDecode(x).startsWith('IQW2|'));
+          el('rc-convert').hidden=!oldTextTag;feedback();
         }else{
           const vals=Array.from(e.message?.records||[]).map(rcDecode).filter(Boolean);
           el('rc-result').textContent=c?.invalid?'IQW2 ilegible':vals.join(' | ').slice(0,150)||'Etiqueta vacía';
@@ -413,7 +419,7 @@ body.rc-focused main{padding:10px 13px 14px}
     el('rc-write').disabled=true;el('rc-read').disabled=true;el('rc-cancel').hidden=false;
     rcStatus('Grabando '+money(card.cents)+'…','Mantén un sticker TUYO junto al teléfono.','busy');
     try{
-      await new NDEFReader().write(cardText(card),{overwrite:true,signal:ctl.signal});
+      await new NDEFReader().write(cardMessage(card),{overwrite:true,signal:ctl.signal});
       rcTag=card;rcRefresh();rcStatus('¡Saldo grabado!','Escritura confirmada: '+money(card.cents),'good');
       el('rc-result').textContent=card.id.slice(-8)+' · '+money(card.cents);
       showToast('Sticker programado',money(card.cents)+' grabados en NFC');feedback();
@@ -441,7 +447,7 @@ body.rc-focused main{padding:10px 13px 14px}
         rcStatus('Escribiendo recarga…','Mantén el MISMO sticker en el teléfono.','busy');
         const timer=setTimeout(()=>ctl.abort(),5500);
         try{
-          await n.write(cardText(next),{overwrite:true,signal:ctl.signal});
+          await n.write(cardMessage(next),{overwrite:true,signal:ctl.signal});
           rcTag=next;rcRefresh();rcStatus('¡Recarga grabada!','Saldo nuevo: '+money(next.cents),'good');
           rcNote('Se conserva el ID, saldo físico actualizado.');
           showToast('Recarga NFC',money(next.cents)+' en etiqueta');feedback();
@@ -452,6 +458,20 @@ body.rc-focused main{padding:10px 13px 14px}
       await n.scan({signal:ctl.signal});
     }catch(e){if(e.name!=='AbortError')rcStatus('No se pudo comenzar',e.message||'Revisa NFC.','warn');rcStopWrite();}
   }
+  async function rcConvert(){
+    if(!rcTag||rcWriteAbort)return;
+    stopScanner();rcStopRead();
+    const before={...rcTag},ctl=new AbortController();rcWriteAbort=ctl;
+    el('rc-convert').disabled=true;rcStatus('Actualizando formato NFC…','Acerca la MISMA tarjeta. Se conserva el ID y el saldo.','busy');
+    try{
+      await new NDEFReader().write(cardMessage(before),{overwrite:true,signal:ctl.signal});
+      rcTag=before;rcRefresh();el('rc-convert').hidden=true;
+      rcStatus('Formato NFC actualizado','Saldo conservado: '+money(before.cents)+'. Comprueba la lectura y el aviso de Android.','good');
+      showToast('Formato actualizado','Saldo NFC conservado: '+money(before.cents));feedback();
+    }catch(e){rcStatus('No se confirmó la actualización','Relee antes de repetir. '+(e.message||e.name),'warn');}
+    finally{rcWriteAbort=null;el('rc-convert').disabled=false;}
+  }
+  el('rc-convert').addEventListener('click',rcConvert);
   el('rc-read').addEventListener('click',rcRead);
   el('rc-stop').addEventListener('click',()=>{rcStopRead();rcStatus('Lectura detenida','Inténtalo nuevamente.');});
   el('rc-write').addEventListener('click',rcWrite);
