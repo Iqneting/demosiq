@@ -285,7 +285,7 @@ main,body.rc-focused main{padding:14px 13px calc(86px + env(safe-area-inset-bott
       <div class="card"><h2>Compatibilidad</h2><p>Requiere HTTPS, Google Chrome para Android, permiso NFC y pantalla encendida con la pestaña visible. Tras conceder permiso, intentará leer automáticamente al volver a abrirse.</p><p>Una tarjeta del Metro, bancaria o de acceso puede activar el NFC de Android y aun así no generar ningún evento accesible desde esta web.</p><p><strong>Por seguridad:</strong> no se guardan números de tarjetas, contenidos NDEF ni identificadores NFC en el historial.</p></div>
     </section>
   </main>
-  <div class="footer">IQNETING · IQ Wallet NFC · Saldo de laboratorio · v2.0</div>
+  <div class="footer">IQNETING · IQ Wallet NFC · Saldo de laboratorio · v2.1</div>
 </div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"><div class="toast-icon" id="toast-icon"><svg width="24" height="24" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="m4 12 5 5 11-11"/></svg></div><div><strong id="toast-title">Cobro registrado</strong><small id="toast-desc">Nuevo saldo: $95.00</small></div></div>
 <div class="overlay" id="confirm-reset" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title"><span class="badge-demo">SALDO FICTICIO</span><h2 id="confirm-title">¿Reiniciar demostración?</h2><p>El saldo regresará a $100 y se eliminarán todos los movimientos de este navegador.</p><div class="modal-actions"><button type="button" class="secondary-btn" id="cancel-reset">Cancelar</button><button type="button" class="control-primary" id="confirm-reset-button">Reiniciar</button></div></div></div>
@@ -398,9 +398,15 @@ main,body.rc-focused main{padding:14px 13px calc(86px + env(safe-area-inset-bott
       status('warn','No confirmado','No se completó el descuento','Relee la etiqueta antes de repetir; no hay escritura confirmada.');
       diagnostic('No se confirmó la escritura NFC ('+(e.name||'Error')+'). Comprueba el saldo leyendo de nuevo.');
       showToast('Cobro sin confirmar','Relee el sticker para comprobar su saldo.',true);
-    }finally{clearTimeout(timer);aborter?.signal.removeEventListener('abort',stop);physicalBusy=false;
-      // Re-armar Chrome tras escritura física: algunos dispositivos liberan el despacho NFC.
-      if(currentView==='terminal'&&!hasManualPause&&!document.hidden){stopScanner();void autoStart();}
+    }finally{
+      clearTimeout(timer);
+      aborter?.signal.removeEventListener('abort',stop);
+      physicalBusy=false;
+      // NO cerrar/reabrir el lector entre operaciones. Esa pausa liberaba NFC
+      // al despachador de Android y causaba la ventana "Nueva etiqueta escaneada".
+      // Web NFC no garantiza exclusividad del lector: Android aun puede intervenir.
+      if(currentView==='terminal'&&isScanning&&!hasManualPause&&!document.hidden)
+        diagnostic('Lector NFC continuo tras operación; retira y vuelve a acercar la etiqueta.');
     }
   }
   function onRead(event){
@@ -695,9 +701,23 @@ main,body.rc-focused main{padding:14px 13px calc(86px + env(safe-area-inset-bott
   el('cancel-reset').addEventListener('click',()=>el('confirm-reset').hidden=true);
   el('confirm-reset-button').addEventListener('click',()=>{state.balance=INITIAL_CENTS;state.items=[];lastDebitAt=0;save();render();el('confirm-reset').hidden=true;showToast('Demostración reiniciada','Saldo restaurado a $100.00');diagnostic('Saldo local restablecido. El lector NFC sigue disponible.');});
   document.addEventListener('visibilitychange',()=>{
-    if(document.hidden){diagnostic('Pestaña no visible: Chrome suspende temporalmente el acceso NFC.');return;}
-    if(currentView==='recharges'){if(rcMode==='read')void rcAutoRead();else void rcStartGuard();}
-    if(currentView==='terminal'&&!hasManualPause){if(isScanning){showActive();diagnostic('Pestaña visible: esperando nuevas lecturas NFC.');}else void autoStart();}
+    if(document.hidden){
+      diagnostic('Pestaña oculta: Android suspende Web NFC; abre IQ Wallet para reanudar.');
+      return;
+    }
+    if(currentView==='recharges'){
+      // Un popup del sistema puede quitar el foco a Chrome. Reconectamos la
+      // escucha al regresar, sin solicitar otro toque cuando el permiso existe.
+      if(rcMode==='read'){
+        rcStopRead();void rcAutoRead();
+      }else{
+        rcStopGuard();void rcStartGuard();
+      }
+    }
+    if(currentView==='terminal'&&!hasManualPause){
+      if(isScanning){showActive();diagnostic('Pestaña activa. NFC escuchando continuamente.');}
+      else void autoStart();
+    }
   });
   setInterval(()=>{const seconds=Math.max(0,Math.ceil((COOLDOWN_MS-(Date.now()-lastDebitAt))/1000));el('next-read').textContent=seconds>0?seconds+' s':'Disponible';},450);
   render();el('activate').hidden=true;void autoStart();
